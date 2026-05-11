@@ -1,8 +1,12 @@
+import "express-async-errors";
 import cors from "cors";
 import dotenv from "dotenv";
-import express from "express";
+import express, { type Request, type Response } from "express";
 import morgan from "morgan";
+import { errorHandler } from "./middleware/errorHandler.js";
+import { accountantsRouter } from "./modules/accountants/accountants.routes.js";
 
+dotenv.config({ path: ".env.local" });
 dotenv.config();
 
 const app = express();
@@ -14,17 +18,15 @@ app.use(
   }),
 );
 app.use(express.json());
-app.use( morgan(process.env.NODE_ENV ?? "dev"));
+app.use(morgan(process.env.NODE_ENV ?? "dev"));
 
-app.get("/api/health", (_req, res) => {
+app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ ok: true });
 });
 
+app.use("/api/accountants", accountantsRouter);
 
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error(`[ERROR] ${err.message}`);
-  res.status(500).json({ message: "Internal server error" });
-});
+app.use(errorHandler);
 
 app.listen(port, () => {
   console.log(`Backend running on http://localhost:${port}`);

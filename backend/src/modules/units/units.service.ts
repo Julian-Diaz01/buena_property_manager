@@ -1,8 +1,11 @@
-import { Prisma, UnitType } from "@prisma/client";
+import prismaClientPkg from "@prisma/client";
+import type { UnitType as UnitTypeType } from "@prisma/client";
 import type { z } from "zod";
 import { ApiError } from "../../lib/http.js";
 import { prisma } from "../../lib/prisma.js";
 import { unitCreateSchema, unitUpdateSchema } from "./units.schemas.js";
+
+const { Prisma, UnitType } = prismaClientPkg;
 
 type UnitCreateInput = z.infer<typeof unitCreateSchema>;
 type UnitUpdateInput = z.infer<typeof unitUpdateSchema>;
@@ -33,7 +36,7 @@ export const listUnits = (query: {
   return prisma.unit.findMany({
     where: {
       buildingId: query.buildingId,
-      type: query.type ? (query.type as UnitType) : undefined,
+      type: query.type ? (query.type as UnitTypeType) : undefined,
       floor: Number.isFinite(parsedFloor) ? parsedFloor : undefined,
       entrance: query.entrance ? { contains: query.entrance, mode: "insensitive" } : undefined,
     },

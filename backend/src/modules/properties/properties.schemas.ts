@@ -1,5 +1,7 @@
-import { PropertyType } from "@prisma/client";
+import prismaClientPkg from "@prisma/client";
 import { z } from "zod";
+
+const { PropertyType } = prismaClientPkg;
 
 const buildingNestedSchema = z.object({
   street: z.string().trim().min(1).max(200),

@@ -1,5 +1,7 @@
-import { UnitType } from "@prisma/client";
+import prismaClientPkg from "@prisma/client";
 import { z } from "zod";
+
+const { UnitType } = prismaClientPkg;
 
 export const unitCreateSchema = z.object({
   buildingId: z.string().trim().min(1),

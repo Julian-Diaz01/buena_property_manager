@@ -1,5 +1,7 @@
-import { UnitType } from "@prisma/client";
+import prismaClientPkg from "@prisma/client";
 import { z } from "zod";
+
+const { UnitType } = prismaClientPkg;
 
 export const unitNestedSchema = z.object({
   number: z.string().trim().min(1).max(100),

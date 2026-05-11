@@ -1,6 +1,8 @@
-import { Prisma } from "@prisma/client";
+import prismaClientPkg from "@prisma/client";
 import type { NextFunction, Request, Response } from "express";
 import { ApiError } from "../lib/http.js";
+
+const { Prisma } = prismaClientPkg;
 
 export const errorHandler = (
   err: unknown,

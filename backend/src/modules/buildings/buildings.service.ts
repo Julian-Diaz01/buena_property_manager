@@ -1,8 +1,11 @@
-import { Prisma } from "@prisma/client";
+import prismaClientPkg from "@prisma/client";
+import type { Prisma as PrismaTypes } from "@prisma/client";
 import type { z } from "zod";
 import { ApiError } from "../../lib/http.js";
 import { prisma } from "../../lib/prisma.js";
 import { addUnitsSchema, buildingCreateSchema, buildingUpdateSchema } from "./buildings.schemas.js";
+
+const { Prisma } = prismaClientPkg;
 
 type BuildingCreateInput = z.infer<typeof buildingCreateSchema>;
 type BuildingUpdateInput = z.infer<typeof buildingUpdateSchema>;
@@ -18,7 +21,7 @@ const ensurePropertyExists = async (propertyId: string) => {
 };
 
 export const listBuildings = (query: { propertyId?: string; street?: string }) => {
-  const where: Prisma.BuildingWhereInput = {};
+  const where: PrismaTypes.BuildingWhereInput = {};
   if (query.propertyId) where.propertyId = query.propertyId;
   if (query.street?.trim()) {
     where.street = { contains: query.street, mode: "insensitive" };

@@ -1,8 +1,11 @@
-import { PropertyType, type Prisma } from "@prisma/client";
+import prismaClientPkg from "@prisma/client";
+import type { Prisma, PropertyType as PropertyTypeType } from "@prisma/client";
 import type { z } from "zod";
 import { ApiError } from "../../lib/http.js";
 import { prisma } from "../../lib/prisma.js";
 import { propertyCreateSchema, propertyUpdateSchema } from "./properties.schemas.js";
+
+const { PropertyType } = prismaClientPkg;
 
 type PropertyCreateInput = z.infer<typeof propertyCreateSchema>;
 type PropertyUpdateInput = z.infer<typeof propertyUpdateSchema>;
@@ -30,8 +33,8 @@ export const listProperties = async (query: {
 }) => {
   const where: Prisma.PropertyWhereInput = {};
 
-  if (query.type && Object.values(PropertyType).includes(query.type as PropertyType)) {
-    where.type = query.type as PropertyType;
+  if (query.type && Object.values(PropertyType).includes(query.type as PropertyTypeType)) {
+    where.type = query.type as PropertyTypeType;
   }
   if (query.managerId) where.managerId = query.managerId;
   if (query.accountantId) where.accountantId = query.accountantId;

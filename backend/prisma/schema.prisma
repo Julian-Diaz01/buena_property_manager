@@ -68,9 +68,18 @@ model Building {
   @@unique([propertyId, street, houseNumber])
 }
 
+model Contract {
+  id        String   @id @default(cuid())
+  name      String
+  unit      Unit?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Unit {
   id               String   @id @default(cuid())
   buildingId       String
+  contractId       String?  @unique
   number           String
   type             UnitType
   floor            Int?
@@ -80,6 +89,7 @@ model Unit {
   constructionYear Int?
   rooms            Int?
   building         Building @relation(fields: [buildingId], references: [id], onDelete: Restrict)
+  contract         Contract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 

@@ -39,14 +39,39 @@ export const listProperties = async (query: {
     where.name = { contains: query.search, mode: "insensitive" };
   }
 
-  return prisma.property.findMany({
+  const properties = await prisma.property.findMany({
     where,
     include: {
-      manager: true,
-      accountant: true,
-      _count: { select: { buildings: true } },
+      buildings: {
+        select: {
+          id: true,
+          units: {
+            select: {
+              contractId: true,
+            },
+          },
+        },
+      },
     },
     orderBy: { createdAt: "desc" },
+  });
+
+  return properties.map((property) => {
+    const buildingIds = property.buildings.map((building) => building.id);
+    const unitsCount = property.buildings.reduce((sum, building) => sum + building.units.length, 0);
+    const rentedUnitsCount = property.buildings.reduce(
+      (sum, building) => sum + building.units.filter((unit) => unit.contractId !== null).length,
+      0,
+    );
+
+    return {
+      id: property.id,
+      name: property.name,
+      type: property.type,
+      buildingIds,
+      unitsCount,
+      rentedUnitsCount,
+    };
   });
 };
 

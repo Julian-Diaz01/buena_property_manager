@@ -16,6 +16,13 @@ const ensureBuildingExists = async (buildingId: string) => {
   }
 };
 
+const ensureContractExists = async (contractId: string) => {
+  const contract = await prisma.contract.findUnique({ where: { id: contractId } });
+  if (!contract) {
+    throw new ApiError(400, "contractId must reference an existing contract");
+  }
+};
+
 export const listUnits = (query: {
   buildingId?: string;
   type?: string;
@@ -31,6 +38,7 @@ export const listUnits = (query: {
       entrance: query.entrance ? { contains: query.entrance, mode: "insensitive" } : undefined,
     },
     include: {
+      contract: true,
       building: {
         include: {
           property: true,
@@ -43,6 +51,9 @@ export const listUnits = (query: {
 
 export const createUnit = async (data: UnitCreateInput) => {
   await ensureBuildingExists(data.buildingId);
+  if (data.contractId) {
+    await ensureContractExists(data.contractId);
+  }
 
   return prisma.unit.create({
     data: {
@@ -51,6 +62,7 @@ export const createUnit = async (data: UnitCreateInput) => {
       coOwnershipShare: toPrismaDecimal(data.coOwnershipShare),
     },
     include: {
+      contract: true,
       building: {
         include: {
           property: true,
@@ -64,6 +76,7 @@ export const getUnitById = async (id: string) => {
   const unit = await prisma.unit.findUnique({
     where: { id },
     include: {
+      contract: true,
       building: {
         include: {
           property: true,
@@ -83,6 +96,9 @@ export const updateUnitById = async (id: string, data: UnitUpdateInput) => {
   if (data.buildingId) {
     await ensureBuildingExists(data.buildingId);
   }
+  if (data.contractId) {
+    await ensureContractExists(data.contractId);
+  }
 
   return prisma.unit.update({
     where: { id },
@@ -92,6 +108,7 @@ export const updateUnitById = async (id: string, data: UnitUpdateInput) => {
       coOwnershipShare: toPrismaDecimal(data.coOwnershipShare),
     },
     include: {
+      contract: true,
       building: {
         include: {
           property: true,

@@ -3,6 +3,7 @@ import { z } from "zod";
 
 export const unitCreateSchema = z.object({
   buildingId: z.string().trim().min(1),
+  contractId: z.string().trim().min(1).optional(),
   number: z.string().trim().min(1).max(100),
   type: z.nativeEnum(UnitType),
   floor: z.number().int().min(-10).max(300).optional(),
@@ -15,5 +16,8 @@ export const unitCreateSchema = z.object({
 
 export const unitUpdateSchema = unitCreateSchema
   .omit({ buildingId: true })
-  .extend({ buildingId: z.string().trim().min(1).optional() })
+  .extend({
+    buildingId: z.string().trim().min(1).optional(),
+    contractId: z.string().trim().min(1).nullable().optional(),
+  })
   .refine((data) => Object.keys(data).length > 0, "At least one field is required");

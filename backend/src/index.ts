@@ -8,6 +8,7 @@ import { accountantsRouter } from "./modules/accountants/accountants.routes.js";
 import { buildingsRouter } from "./modules/buildings/buildings.routes.js";
 import { managersRouter } from "./modules/managers/managers.routes.js";
 import { propertiesRouter } from "./modules/properties/properties.routes.js";
+import { unitsRouter } from "./modules/units/units.routes.js";
 
 dotenv.config({ path: ".env.local" });
 dotenv.config();
@@ -31,6 +32,7 @@ app.use("/api/managers", managersRouter);
 app.use("/api/accountants", accountantsRouter);
 app.use("/api/properties", propertiesRouter);
 app.use("/api/buildings", buildingsRouter);
+app.use("/api/units", unitsRouter);
 
 app.use(errorHandler);
 

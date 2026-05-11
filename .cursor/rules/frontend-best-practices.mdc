@@ -13,7 +13,31 @@ You are an expert full-stack developer proficient in TypeScript, React, Next.js,
     - Favor iteration and modularization over code duplication.
     - Use descriptive variable names with auxiliary verbs (e.g., `isLoading`, `hasError`).
     - Structure files with exported components, subcomponents, helpers, static content, and types.
-    - Use camelCase for directory names (e.g., `components/authWizard`).
+
+    ### File & Directory Naming (strict)
+    Casing communicates intent: UI = `camelCase`, everything else = `kebab-case`. Exported symbols inside files still follow normal JS conventions (`PascalCase` for components/types, `camelCase` for functions/values, `useFoo` for hooks).
+
+    - **`camelCase` — UI / React component files & their folders.**
+      - Any file in `components/app/**` that renders JSX or composes UI is a "component file" and uses `camelCase`.
+      - Folders that group a UI feature/surface are also `camelCase`.
+      - Good: `components/app/appShell.tsx`, `components/app/propertiesListView.tsx`, `components/app/createPropertyWizard/index.tsx`, `components/app/createPropertyWizard/stepUnits.tsx`.
+      - Bad: `app-shell.tsx`, `create-property-wizard/`, `step-units.tsx`, `AppShell.tsx` (filename should not be `PascalCase`; that's reserved for the exported component).
+
+    - **`kebab-case` — everything that is NOT a UI component.**
+      - Business logic, API clients, helpers, schemas, types, hooks, constants, demo/seed data, server actions, route handlers, config — anything without JSX.
+      - Covers `lib/**`, server-only modules, and plain `.ts` helpers that live next to components.
+      - Good: `lib/api/query-keys.ts`, `lib/api/properties.ts`, `lib/app/unit-helpers.ts`, `lib/app/tenancy-demo-data.ts`, `hooks/use-debounced-value.ts`.
+      - Bad: `lib/api/queryKeys.ts`, `lib/app/unitHelpers.ts` (business logic, not UI).
+      - Multi-word logic files **inside** a camelCase component folder also stay kebab-case (e.g. `createPropertyWizard/wizard-helpers.ts`, NOT `wizardHelpers.ts`).
+
+    - **Exceptions — leave these as the framework/library expects.**
+      - `components/ui/*` — shadcn/ui primitives. Keep upstream kebab-case (`button.tsx`, `alert-dialog.tsx`) so the shadcn CLI keeps working.
+      - Next.js App Router route segments under `app/**` — URL-friendly kebab-case (e.g. `app/(main)/tenancies/[id]/balance-history/page.tsx`).
+      - Next.js special files: `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`, `route.ts`, `template.tsx`, `default.tsx`, `middleware.ts`, `instrumentation.ts`.
+      - Config / dotfiles with fixed names (`next.config.ts`, `tailwind.config.ts`, `.eslintrc.cjs`, …).
+
+    - **Decision rule for new files:** does the file's primary export render JSX or compose UI? → `camelCase`. Otherwise → `kebab-case`. When in doubt, default to `kebab-case`.
+    - When refactoring, fix casing inconsistencies in the same change rather than leaving the tree mixed.
 
     ### Optimization and Best Practices
     - Minimize the use of `'use client'`, `useEffect`, and `setState`; favor React Server Components (RSC) and Next.js SSR features.

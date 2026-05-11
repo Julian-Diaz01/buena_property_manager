@@ -6,6 +6,7 @@ import morgan from "morgan";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { accountantsRouter } from "./modules/accountants/accountants.routes.js";
 import { managersRouter } from "./modules/managers/managers.routes.js";
+import { propertiesRouter } from "./modules/properties/properties.routes.js";
 
 dotenv.config({ path: ".env.local" });
 dotenv.config();
@@ -27,6 +28,7 @@ app.get("/api/health", (_req: Request, res: Response) => {
 
 app.use("/api/managers", managersRouter);
 app.use("/api/accountants", accountantsRouter);
+app.use("/api/properties", propertiesRouter);
 
 app.use(errorHandler);
 

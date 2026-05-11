@@ -916,6 +916,52 @@ components:
           type: string
           format: date-time
 
+    PropertyListItem:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - buildingIds
+        - unitsCount
+        - rentedUnitsCount
+        - manager
+        - accountant
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          maxLength: 200
+        type:
+          $ref: "#/components/schemas/PropertyType"
+        buildingIds:
+          type: array
+          items:
+            type: string
+        unitsCount:
+          type: integer
+          minimum: 0
+        rentedUnitsCount:
+          type: integer
+          minimum: 0
+        manager:
+          type: object
+          required: [id, fullName]
+          properties:
+            id:
+              type: string
+            fullName:
+              type: string
+        accountant:
+          type: object
+          required: [id, fullName]
+          properties:
+            id:
+              type: string
+            fullName:
+              type: string
+
     Property:
       type: object
       required:
@@ -1295,7 +1341,7 @@ components:
         data:
           type: array
           items:
-            $ref: "#/components/schemas/Property"
+            $ref: "#/components/schemas/PropertyListItem"
 
     BuildingSuccessEnvelope:
       type: object

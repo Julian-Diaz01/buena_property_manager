@@ -45,6 +45,8 @@ export const listProperties = async (query: {
   const properties = await prisma.property.findMany({
     where,
     include: {
+      manager: { select: { id: true, fullName: true } },
+      accountant: { select: { id: true, fullName: true } },
       buildings: {
         select: {
           id: true,
@@ -74,6 +76,8 @@ export const listProperties = async (query: {
       buildingIds,
       unitsCount,
       rentedUnitsCount,
+      manager: property.manager,
+      accountant: property.accountant,
     };
   });
 };

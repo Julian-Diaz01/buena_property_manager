@@ -1,0 +1,1337 @@
+openapi: 3.0.3
+info:
+  title: Bueno Property Manager Backend API
+  version: 1.0.0
+  description: OpenAPI contract for the currently implemented Express backend endpoints.
+servers:
+  - url: http://localhost:4000
+    description: Local development server
+tags:
+  - name: Health
+  - name: Managers
+  - name: Accountants
+  - name: Properties
+  - name: Buildings
+  - name: Units
+  - name: Contracts
+paths:
+  /api/health:
+    get:
+      tags: [Health]
+      summary: Health check
+      operationId: getHealth
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+
+  /api/managers:
+    get:
+      tags: [Managers]
+      summary: List managers
+      operationId: listManagers
+      responses:
+        "200":
+          $ref: "#/components/responses/ManagerListSuccess"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      tags: [Managers]
+      summary: Create manager
+      operationId: createManager
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ManagerCreateInput"
+      responses:
+        "201":
+          $ref: "#/components/responses/ManagerSuccess"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "409":
+          $ref: "#/components/responses/ConflictError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/managers/{id}:
+    get:
+      tags: [Managers]
+      summary: Get manager by id
+      operationId: getManagerById
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      responses:
+        "200":
+          $ref: "#/components/responses/ManagerSuccess"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    patch:
+      tags: [Managers]
+      summary: Update manager by id
+      operationId: updateManagerById
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ManagerUpdateInput"
+      responses:
+        "200":
+          $ref: "#/components/responses/ManagerSuccess"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "409":
+          $ref: "#/components/responses/ConflictError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags: [Managers]
+      summary: Delete manager by id
+      operationId: deleteManagerById
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      responses:
+        "200":
+          $ref: "#/components/responses/ManagerSuccess"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "409":
+          $ref: "#/components/responses/ConflictError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/accountants:
+    get:
+      tags: [Accountants]
+      summary: List accountants
+      operationId: listAccountants
+      responses:
+        "200":
+          $ref: "#/components/responses/AccountantListSuccess"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      tags: [Accountants]
+      summary: Create accountant
+      operationId: createAccountant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountantCreateInput"
+      responses:
+        "201":
+          $ref: "#/components/responses/AccountantSuccess"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "409":
+          $ref: "#/components/responses/ConflictError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/accountants/{id}:
+    get:
+      tags: [Accountants]
+      summary: Get accountant by id
+      operationId: getAccountantById
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      responses:
+        "200":
+          $ref: "#/components/responses/AccountantSuccess"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    patch:
+      tags: [Accountants]
+      summary: Update accountant by id
+      operationId: updateAccountantById
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountantUpdateInput"
+      responses:
+        "200":
+          $ref: "#/components/responses/AccountantSuccess"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "409":
+          $ref: "#/components/responses/ConflictError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags: [Accountants]
+      summary: Delete accountant by id
+      operationId: deleteAccountantById
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      responses:
+        "200":
+          $ref: "#/components/responses/AccountantSuccess"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "409":
+          $ref: "#/components/responses/ConflictError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/properties:
+    get:
+      tags: [Properties]
+      summary: List properties
+      operationId: listProperties
+      parameters:
+        - in: query
+          name: type
+          schema:
+            $ref: "#/components/schemas/PropertyType"
+          required: false
+        - in: query
+          name: managerId
+          schema:
+            type: string
+          required: false
+        - in: query
+          name: accountantId
+          schema:
+            type: string
+          required: false
+        - in: query
+          name: search
+          schema:
+            type: string
+          required: false
+      responses:
+        "200":
+          $ref: "#/components/responses/PropertyListSuccess"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      tags: [Properties]
+      summary: Create property
+      operationId: createProperty
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PropertyCreateInput"
+      responses:
+        "201":
+          $ref: "#/components/responses/PropertySuccess"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "409":
+          $ref: "#/components/responses/ConflictError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/properties/{id}:
+    get:
+      tags: [Properties]
+      summary: Get property by id
+      operationId: getPropertyById
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      responses:
+        "200":
+          $ref: "#/components/responses/PropertySuccess"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    patch:
+      tags: [Properties]
+      summary: Update property by id
+      operationId: updatePropertyById
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PropertyUpdateInput"
+      responses:
+        "200":
+          $ref: "#/components/responses/PropertySuccess"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "409":
+          $ref: "#/components/responses/ConflictError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags: [Properties]
+      summary: Delete property by id
+      operationId: deletePropertyById
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      responses:
+        "200":
+          $ref: "#/components/responses/PropertySuccess"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "409":
+          $ref: "#/components/responses/ConflictError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/buildings:
+    get:
+      tags: [Buildings]
+      summary: List buildings
+      operationId: listBuildings
+      parameters:
+        - in: query
+          name: propertyId
+          schema:
+            type: string
+          required: false
+        - in: query
+          name: street
+          schema:
+            type: string
+          required: false
+      responses:
+        "200":
+          $ref: "#/components/responses/BuildingListSuccess"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      tags: [Buildings]
+      summary: Create building
+      operationId: createBuilding
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BuildingCreateInput"
+      responses:
+        "201":
+          $ref: "#/components/responses/BuildingSuccess"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "409":
+          $ref: "#/components/responses/ConflictError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/buildings/{id}:
+    get:
+      tags: [Buildings]
+      summary: Get building by id
+      operationId: getBuildingById
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      responses:
+        "200":
+          $ref: "#/components/responses/BuildingSuccess"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    patch:
+      tags: [Buildings]
+      summary: Update building by id
+      operationId: updateBuildingById
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BuildingUpdateInput"
+      responses:
+        "200":
+          $ref: "#/components/responses/BuildingSuccess"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "409":
+          $ref: "#/components/responses/ConflictError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags: [Buildings]
+      summary: Delete building by id
+      operationId: deleteBuildingById
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      responses:
+        "200":
+          $ref: "#/components/responses/BuildingSuccess"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "409":
+          $ref: "#/components/responses/ConflictError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/buildings/{id}/add_unit:
+    patch:
+      tags: [Buildings]
+      summary: Add units to building
+      operationId: addUnitsToBuildingById
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddUnitsInput"
+      responses:
+        "200":
+          $ref: "#/components/responses/BuildingSuccess"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "409":
+          $ref: "#/components/responses/ConflictError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/units:
+    get:
+      tags: [Units]
+      summary: List units
+      operationId: listUnits
+      parameters:
+        - in: query
+          name: buildingId
+          schema:
+            type: string
+          required: false
+        - in: query
+          name: type
+          schema:
+            $ref: "#/components/schemas/UnitType"
+          required: false
+        - in: query
+          name: floor
+          schema:
+            type: string
+          required: false
+        - in: query
+          name: entrance
+          schema:
+            type: string
+          required: false
+      responses:
+        "200":
+          $ref: "#/components/responses/UnitListSuccess"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      tags: [Units]
+      summary: Create unit
+      operationId: createUnit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UnitCreateInput"
+      responses:
+        "201":
+          $ref: "#/components/responses/UnitSuccess"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "409":
+          $ref: "#/components/responses/ConflictError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/units/{id}:
+    get:
+      tags: [Units]
+      summary: Get unit by id
+      operationId: getUnitById
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      responses:
+        "200":
+          $ref: "#/components/responses/UnitSuccess"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    patch:
+      tags: [Units]
+      summary: Update unit by id
+      operationId: updateUnitById
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UnitUpdateInput"
+      responses:
+        "200":
+          $ref: "#/components/responses/UnitSuccess"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "409":
+          $ref: "#/components/responses/ConflictError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags: [Units]
+      summary: Delete unit by id
+      operationId: deleteUnitById
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      responses:
+        "200":
+          $ref: "#/components/responses/UnitSuccess"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "409":
+          $ref: "#/components/responses/ConflictError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/contracts:
+    get:
+      tags: [Contracts]
+      summary: List contracts
+      operationId: listContracts
+      responses:
+        "200":
+          $ref: "#/components/responses/ContractListSuccess"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/contracts/units/{unitId}:
+    patch:
+      tags: [Contracts]
+      summary: Assign existing contract to a unit
+      operationId: assignExistingContractToUnit
+      parameters:
+        - in: path
+          name: unitId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignExistingContractInput"
+      responses:
+        "200":
+          $ref: "#/components/responses/UnitSuccess"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "409":
+          $ref: "#/components/responses/ConflictError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      tags: [Contracts]
+      summary: Create contract and assign to a unit
+      operationId: createAndAssignContractToUnit
+      parameters:
+        - in: path
+          name: unitId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAndAssignContractInput"
+      responses:
+        "201":
+          $ref: "#/components/responses/UnitSuccess"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "409":
+          $ref: "#/components/responses/ConflictError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags: [Contracts]
+      summary: Remove contract from unit
+      operationId: removeUnitContract
+      parameters:
+        - in: path
+          name: unitId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          $ref: "#/components/responses/UnitSuccess"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+components:
+  parameters:
+    IdPathParam:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+
+  responses:
+    ManagerSuccess:
+      description: Success response with manager payload
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ManagerSuccessEnvelope"
+    ManagerListSuccess:
+      description: Success response with manager list payload
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ManagerListSuccessEnvelope"
+    AccountantSuccess:
+      description: Success response with accountant payload
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/AccountantSuccessEnvelope"
+    AccountantListSuccess:
+      description: Success response with accountant list payload
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/AccountantListSuccessEnvelope"
+    PropertySuccess:
+      description: Success response with property payload
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/PropertySuccessEnvelope"
+    PropertyListSuccess:
+      description: Success response with property list payload
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/PropertyListSuccessEnvelope"
+    BuildingSuccess:
+      description: Success response with building payload
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/BuildingSuccessEnvelope"
+    BuildingListSuccess:
+      description: Success response with building list payload
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/BuildingListSuccessEnvelope"
+    UnitSuccess:
+      description: Success response with unit payload
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UnitSuccessEnvelope"
+    UnitListSuccess:
+      description: Success response with unit list payload
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UnitListSuccessEnvelope"
+    ContractListSuccess:
+      description: Success response with contract list payload
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ContractListSuccessEnvelope"
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            invalidRequest:
+              value:
+                message: Invalid request body
+                details:
+                  issues:
+                    - path: [fullName]
+                      message: Required
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            notFound:
+              value:
+                message: Resource not found
+    ConflictError:
+      description: Uniqueness or foreign key conflict
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            conflict:
+              value:
+                message: Foreign key constraint conflict
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            internal:
+              value:
+                message: Internal server error
+
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+        details:
+          nullable: true
+
+    PropertyType:
+      type: string
+      enum: [WEG, MV]
+
+    UnitType:
+      type: string
+      enum: [APARTMENT, OFFICE, GARDEN, PARKING]
+
+    Timestamped:
+      type: object
+      required: [createdAt, updatedAt]
+      properties:
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Manager:
+      type: object
+      required: [id, fullName, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+        fullName:
+          type: string
+          maxLength: 200
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Accountant:
+      type: object
+      required: [id, fullName, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+        fullName:
+          type: string
+          maxLength: 200
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Contract:
+      type: object
+      required: [id, name, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          maxLength: 200
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Unit:
+      type: object
+      required:
+        - id
+        - buildingId
+        - number
+        - type
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        buildingId:
+          type: string
+        contractId:
+          type: string
+          nullable: true
+        number:
+          type: string
+          maxLength: 100
+        type:
+          $ref: "#/components/schemas/UnitType"
+        floor:
+          type: integer
+          minimum: -10
+          maximum: 300
+          nullable: true
+        entrance:
+          type: string
+          maxLength: 50
+          nullable: true
+        size:
+          type: number
+          minimum: 0
+          nullable: true
+        coOwnershipShare:
+          type: number
+          minimum: 0
+          nullable: true
+        constructionYear:
+          type: integer
+          minimum: 1800
+          maximum: 2200
+          nullable: true
+        rooms:
+          type: integer
+          minimum: 0
+          nullable: true
+        contract:
+          allOf:
+            - $ref: "#/components/schemas/Contract"
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Building:
+      type: object
+      required:
+        - id
+        - propertyId
+        - street
+        - houseNumber
+        - entrances
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        propertyId:
+          type: string
+        street:
+          type: string
+          maxLength: 200
+        houseNumber:
+          type: string
+          maxLength: 50
+        floors:
+          type: integer
+          minimum: 0
+          nullable: true
+        maxApartments:
+          type: integer
+          minimum: 0
+          nullable: true
+        description:
+          type: string
+          maxLength: 1000
+          nullable: true
+        entrances:
+          type: array
+          items:
+            type: string
+            maxLength: 50
+        units:
+          type: array
+          items:
+            $ref: "#/components/schemas/Unit"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Property:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - managerId
+        - accountantId
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          maxLength: 200
+        type:
+          $ref: "#/components/schemas/PropertyType"
+        managerId:
+          type: string
+        accountantId:
+          type: string
+        manager:
+          $ref: "#/components/schemas/Manager"
+        accountant:
+          $ref: "#/components/schemas/Accountant"
+        buildings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Building"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ManagerCreateInput:
+      type: object
+      required: [fullName]
+      properties:
+        fullName:
+          type: string
+          minLength: 1
+          maxLength: 200
+    ManagerUpdateInput:
+      type: object
+      minProperties: 1
+      properties:
+        fullName:
+          type: string
+          minLength: 1
+          maxLength: 200
+
+    AccountantCreateInput:
+      type: object
+      required: [fullName]
+      properties:
+        fullName:
+          type: string
+          minLength: 1
+          maxLength: 200
+    AccountantUpdateInput:
+      type: object
+      minProperties: 1
+      properties:
+        fullName:
+          type: string
+          minLength: 1
+          maxLength: 200
+
+    BuildingNestedInput:
+      type: object
+      required: [street, houseNumber]
+      properties:
+        street:
+          type: string
+          minLength: 1
+          maxLength: 200
+        houseNumber:
+          type: string
+          minLength: 1
+          maxLength: 50
+        floors:
+          type: integer
+          minimum: 0
+        maxApartments:
+          type: integer
+          minimum: 0
+        description:
+          type: string
+          maxLength: 1000
+        entrances:
+          type: array
+          items:
+            type: string
+            maxLength: 50
+
+    PropertyCreateInput:
+      type: object
+      required: [name, type, managerId, accountantId]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        type:
+          $ref: "#/components/schemas/PropertyType"
+        managerId:
+          type: string
+          minLength: 1
+        accountantId:
+          type: string
+          minLength: 1
+        buildings:
+          type: array
+          items:
+            $ref: "#/components/schemas/BuildingNestedInput"
+    PropertyUpdateInput:
+      type: object
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        type:
+          $ref: "#/components/schemas/PropertyType"
+        managerId:
+          type: string
+          minLength: 1
+        accountantId:
+          type: string
+          minLength: 1
+        buildings:
+          type: array
+          items:
+            $ref: "#/components/schemas/BuildingNestedInput"
+
+    UnitNestedInput:
+      type: object
+      required: [number, type]
+      properties:
+        number:
+          type: string
+          minLength: 1
+          maxLength: 100
+        type:
+          $ref: "#/components/schemas/UnitType"
+        floor:
+          type: integer
+          minimum: -10
+          maximum: 300
+        entrance:
+          type: string
+          maxLength: 50
+        size:
+          type: number
+          minimum: 0
+        coOwnershipShare:
+          type: number
+          minimum: 0
+        constructionYear:
+          type: integer
+          minimum: 1800
+          maximum: 2200
+        rooms:
+          type: integer
+          minimum: 0
+
+    BuildingCreateInput:
+      type: object
+      required: [propertyId, street, houseNumber]
+      properties:
+        propertyId:
+          type: string
+          minLength: 1
+        street:
+          type: string
+          minLength: 1
+          maxLength: 200
+        houseNumber:
+          type: string
+          minLength: 1
+          maxLength: 50
+        floors:
+          type: integer
+          minimum: 0
+        maxApartments:
+          type: integer
+          minimum: 0
+        description:
+          type: string
+          maxLength: 1000
+        entrances:
+          type: array
+          items:
+            type: string
+            maxLength: 50
+        units:
+          type: array
+          items:
+            $ref: "#/components/schemas/UnitNestedInput"
+    BuildingUpdateInput:
+      type: object
+      minProperties: 1
+      properties:
+        propertyId:
+          type: string
+          minLength: 1
+        street:
+          type: string
+          minLength: 1
+          maxLength: 200
+        houseNumber:
+          type: string
+          minLength: 1
+          maxLength: 50
+        floors:
+          type: integer
+          minimum: 0
+        maxApartments:
+          type: integer
+          minimum: 0
+        description:
+          type: string
+          maxLength: 1000
+        entrances:
+          type: array
+          items:
+            type: string
+            maxLength: 50
+        units:
+          type: array
+          items:
+            $ref: "#/components/schemas/UnitNestedInput"
+    AddUnitsInput:
+      type: object
+      required: [units]
+      properties:
+        units:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/UnitNestedInput"
+
+    UnitCreateInput:
+      type: object
+      required: [buildingId, number, type]
+      properties:
+        buildingId:
+          type: string
+          minLength: 1
+        contractId:
+          type: string
+          minLength: 1
+        number:
+          type: string
+          minLength: 1
+          maxLength: 100
+        type:
+          $ref: "#/components/schemas/UnitType"
+        floor:
+          type: integer
+          minimum: -10
+          maximum: 300
+        entrance:
+          type: string
+          maxLength: 50
+        size:
+          type: number
+          minimum: 0
+        coOwnershipShare:
+          type: number
+          minimum: 0
+        constructionYear:
+          type: integer
+          minimum: 1800
+          maximum: 2200
+        rooms:
+          type: integer
+          minimum: 0
+    UnitUpdateInput:
+      type: object
+      minProperties: 1
+      properties:
+        buildingId:
+          type: string
+          minLength: 1
+        contractId:
+          type: string
+          minLength: 1
+          nullable: true
+        number:
+          type: string
+          minLength: 1
+          maxLength: 100
+        type:
+          $ref: "#/components/schemas/UnitType"
+        floor:
+          type: integer
+          minimum: -10
+          maximum: 300
+        entrance:
+          type: string
+          maxLength: 50
+        size:
+          type: number
+          minimum: 0
+        coOwnershipShare:
+          type: number
+          minimum: 0
+        constructionYear:
+          type: integer
+          minimum: 1800
+          maximum: 2200
+        rooms:
+          type: integer
+          minimum: 0
+
+    AssignExistingContractInput:
+      type: object
+      required: [contractId]
+      properties:
+        contractId:
+          type: string
+          minLength: 1
+    CreateAndAssignContractInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+
+    ManagerSuccessEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/Manager"
+    ManagerListSuccessEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Manager"
+
+    AccountantSuccessEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/Accountant"
+    AccountantListSuccessEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Accountant"
+
+    PropertySuccessEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/Property"
+    PropertyListSuccessEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Property"
+
+    BuildingSuccessEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/Building"
+    BuildingListSuccessEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Building"
+
+    UnitSuccessEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/Unit"
+    UnitListSuccessEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Unit"
+
+    ContractListSuccessEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Contract"

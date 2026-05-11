@@ -10,7 +10,7 @@ export const unitNestedSchema = z.object({
   entrance: z.string().trim().max(50).optional(),
   size: z.coerce.number().nonnegative().optional(),
   coOwnershipShare: z.coerce.number().nonnegative().optional(),
-  constructionYear: z.number().int().min(1800).max(2200).optional(),
+  constructionYear: z.number().int().min(1800).max(2026).optional(),
   rooms: z.number().int().nonnegative().optional(),
 });
 

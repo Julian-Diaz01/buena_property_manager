@@ -850,7 +850,7 @@ components:
         constructionYear:
           type: integer
           minimum: 1800
-          maximum: 2200
+          maximum: 2026
           nullable: true
         rooms:
           type: integer
@@ -1081,7 +1081,7 @@ components:
         constructionYear:
           type: integer
           minimum: 1800
-          maximum: 2200
+          maximum: 2026
         rooms:
           type: integer
           minimum: 0
@@ -1194,7 +1194,7 @@ components:
         constructionYear:
           type: integer
           minimum: 1800
-          maximum: 2200
+          maximum: 2026
         rooms:
           type: integer
           minimum: 0
@@ -1231,7 +1231,7 @@ components:
         constructionYear:
           type: integer
           minimum: 1800
-          maximum: 2200
+          maximum: 2026
         rooms:
           type: integer
           minimum: 0

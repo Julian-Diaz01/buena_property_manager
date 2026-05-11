@@ -41,7 +41,7 @@ export function LoginCard() {
           </div>
 
           <Button asChild className="h-11 w-full text-sm font-semibold">
-            <Link href="/dashboard">
+            <Link href="/">
               <LogIn className="mr-2 h-4 w-4" />
               Sign In
             </Link>

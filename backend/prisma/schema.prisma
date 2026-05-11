@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PropertyType {
+  WEG
+  MV
+}
+
+enum UnitType {
+  APARTMENT
+  OFFICE
+  GARDEN
+  PARKING
+}
+
+model Manager {
+  id         String     @id @default(cuid())
+  fullName   String
+  properties Property[] @relation("PropertyManager")
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model Accountant {
+  id         String     @id @default(cuid())
+  fullName   String
+  properties Property[] @relation("PropertyAccountant")
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model Property {
+  id           String      @id @default(cuid())
+  name         String
+  type         PropertyType
+  managerId    String
+  accountantId String
+  manager      Manager     @relation("PropertyManager", fields: [managerId], references: [id], onDelete: Restrict)
+  accountant   Accountant  @relation("PropertyAccountant", fields: [accountantId], references: [id], onDelete: Restrict)
+  buildings    Building[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([managerId])
+  @@index([accountantId])
+}
+
+model Building {
+  id            String   @id @default(cuid())
+  propertyId    String
+  street        String
+  houseNumber   String
+  floors        Int?
+  maxApartments Int?
+  description   String?
+  entrances     String[] @default(["main"])
+  property      Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  units         Unit[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([propertyId])
+  @@unique([propertyId, street, houseNumber])
+}
+
+model Unit {
+  id               String   @id @default(cuid())
+  buildingId       String
+  number           String
+  type             UnitType
+  floor            Int?
+  entrance         String?
+  size             Decimal? @db.Decimal(10, 2)
+  coOwnershipShare Decimal? @db.Decimal(8, 4)
+  constructionYear Int?
+  rooms            Int?
+  building         Building @relation(fields: [buildingId], references: [id], onDelete: Restrict)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([buildingId])
+  @@unique([buildingId, number])
+}

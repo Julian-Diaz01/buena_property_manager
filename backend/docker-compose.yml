@@ -3,6 +3,8 @@ services:
     image: postgres:16-alpine
     container_name: bueno-property-manager-db
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -21,11 +23,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        DATABASE_URL: ${DATABASE_URL}
     container_name: bueno-property-manager-backend
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
       NODE_ENV: ${NODE_ENV}
       PORT: ${PORT}

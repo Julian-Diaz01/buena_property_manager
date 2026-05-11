@@ -8,6 +8,9 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "smoke": "tsx src/scripts/smoke.ts",
+    "docker:up": "docker compose --env-file .env up -d --build",
+    "docker:down": "docker compose --env-file .env down",
+    "docker:logs": "docker compose --env-file .env logs -f",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:create": "prisma migrate dev --create-only"

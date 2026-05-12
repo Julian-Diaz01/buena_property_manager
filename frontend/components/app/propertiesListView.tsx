@@ -125,10 +125,10 @@ export function PropertiesListView() {
                       </Badge>
                     </td>
                     <td className="text-muted-foreground px-4 py-3">
-                      {nBuildings} {nBuildings === 1 ? "building" : "buildings"}
+                      {nBuildings}
                     </td>
                     <td className="text-muted-foreground px-4 py-3">
-                      {property.unitsCount} {property.unitsCount === 1 ? "unit" : "units"}
+                      {property.unitsCount}
                     </td>
                     <td className="px-4 py-3">
                       <OccupancyBadge property={property} />

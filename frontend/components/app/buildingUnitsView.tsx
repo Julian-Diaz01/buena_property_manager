@@ -124,7 +124,6 @@ export function BuildingUnitsView({ propertyId, buildingId }: BuildingUnitsViewP
       await queryClient.invalidateQueries({ queryKey: queryKeys.properties });
       setContractForUnitId(null);
       setTenantName("");
-      router.push(`/tenancies/${unitId}`);
     },
   });
 
@@ -590,7 +589,7 @@ export function BuildingUnitsView({ propertyId, buildingId }: BuildingUnitsViewP
                 })
               }
             >
-              {assignContractMutation.isPending ? "Saving…" : "Save & open tenancy"}
+              {assignContractMutation.isPending ? "Saving…" : "Save"}
             </Button>
           </div>
         </Card>

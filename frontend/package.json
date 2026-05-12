@@ -1,6 +1,8 @@
 {
   "name": "frontend",
   "version": "0.1.0",
+  "author": "Julian Diaz",
+  "contact": "judadi1994@gmail.com",
   "private": true,
   "scripts": {
     "dev": "next dev",

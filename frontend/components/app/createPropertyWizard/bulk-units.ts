@@ -1,15 +1,12 @@
 import type { UnitType } from "@/lib/api/types";
 
-import { floorCountCapFromBuilding, isFloorWithinBuildingCap, maxUnitsCapFromBuilding } from "./building-rail-helpers";
+import { floorCountCapFromBuilding, isFloorWithinBuildingCap, maxUnitsCapFromBuilding } from "@/components/app/createPropertyWizard/building-rail-helpers";
 import { newClientId, type LocalBuilding, type LocalUnit } from "./types";
 
 export type BulkGenerateParams = {
   buildingClientId: string;
-  /** Building row for rails (optional if unknown). */
   building: LocalBuilding | undefined;
-  /** Draft units already in the form for this building. */
   draftUnitsForBuilding: number;
-  /** Units already saved in the backend for this building (e.g. building page). */
   persistedUnitsForBuilding: number;
   bulkFloorStart: string;
   bulkFloorEnd: string;

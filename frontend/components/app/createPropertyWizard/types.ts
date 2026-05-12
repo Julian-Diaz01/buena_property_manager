@@ -1,6 +1,5 @@
 import type { UnitType } from "@/lib/api/types";
 
-/** Stable id for the first wizard/dialog building row so SSR and client markup match (random UUIDs in useState init cause hydration mismatches). User-added rows use {@link newClientId}. */
 export const INITIAL_LOCAL_BUILDING_CLIENT_ID = "__local-building-initial__";
 
 export const newClientId = () =>
@@ -16,11 +15,8 @@ export type LocalBuilding = {
   postalCode: string;
   city: string;
   description: string;
-  /** Optional rail: number of floors (1-based unit floors must be ≤ this when set). */
   floors: string;
-  /** Optional rail: max units in this building (shown as “Max units” in the UI). */
   maxApartments: string;
-  /** Optional: when non-empty, new units pick from this list; otherwise default “Main Entrance”. */
   entrances: string[];
 };
 

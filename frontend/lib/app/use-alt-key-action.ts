@@ -8,9 +8,6 @@ function isTypingTarget(target: EventTarget | null): boolean {
   return false;
 }
 
-/**
- * Global Alt+letter shortcut (no Ctrl/Meta). Skips when focus is in a field so typing is unaffected.
- */
 export function useAltKeyAction(enabled: boolean, code: string, action: () => void) {
   useEffect(() => {
     if (!enabled) return;

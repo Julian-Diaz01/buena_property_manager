@@ -30,7 +30,6 @@ import type { UnitFieldErrors } from "./schemas";
 import { FieldError, KeyboardShortcut } from "./shared";
 
 export type StepUnitsProps = {
-  /** One building (e.g. add-units on existing building page) — hides bulk building picker and table Building column. */
   singleBuildingContext?: boolean;
   buildings: LocalBuilding[];
   units: LocalUnit[];
@@ -53,9 +52,7 @@ export type StepUnitsProps = {
   onUpdateUnit: (clientId: string, patch: Partial<LocalUnit>) => void;
   onRemoveUnit: (clientId: string) => void;
   onAddUnit: () => void;
-  /** Re-run unit + building-id checks when a control loses focus (full row). */
   onUnitBlur?: (clientId: string) => void;
-  /** Saved unit counts per building client id (e.g. existing DB rows on the building page). */
   persistedUnitCountByBuildingClientId?: Record<string, number>;
   disableAddSingleUnit?: boolean;
   addSingleUnitHint?: string;

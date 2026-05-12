@@ -16,7 +16,6 @@ import { useWizardState } from "./use-wizard-state";
 const FOCUSABLE_SELECTOR = 'input:not([type="hidden"]), select, textarea, button';
 
 const STEP_LABELS: Record<number, string> = { 1: "General", 2: "Buildings", 3: "Units" };
-const STEP_TITLES: Record<number, string> = { 1: "General info", 2: "Building data", 3: "Units" };
 
 export function CreatePropertyWizard() {
   const w = useWizardState();

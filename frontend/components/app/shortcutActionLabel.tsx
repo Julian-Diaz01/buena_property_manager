@@ -5,7 +5,6 @@ type ShortcutActionLabelProps = {
   className?: string;
 };
 
-/** Muted shortcut hint for primary (filled) action buttons — smaller, non-bold, semi-transparent on the right. */
 export function ShortcutActionLabel({ shortcut, className }: ShortcutActionLabelProps) {
   return (
     <span

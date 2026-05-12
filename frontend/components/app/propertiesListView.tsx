@@ -99,7 +99,6 @@ export function PropertiesListView() {
               <th className="px-4 py-3 font-medium">Buildings</th>
               <th className="px-4 py-3 font-medium">Total units</th>
               <th className="px-4 py-3 font-medium">Occupancy</th>
-              <th className="px-4 py-3 font-medium">Management</th>
               <th className="px-4 py-3 font-medium" />
             </tr>
           </thead>
@@ -140,15 +139,6 @@ export function PropertiesListView() {
                     </td>
                     <td className="px-4 py-3">
                       <OccupancyBadge property={property} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                        <Users className="h-4 w-4 shrink-0" />
-                        <div>
-                          <div>{property.manager.fullName}</div>
-                          <div className="text-muted-foreground/80 text-xs">{property.accountant.fullName}</div>
-                        </div>
-                      </div>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Button asChild variant="outline" size="sm">

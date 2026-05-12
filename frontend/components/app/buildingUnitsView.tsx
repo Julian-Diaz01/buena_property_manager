@@ -364,11 +364,6 @@ export function BuildingUnitsView({ propertyId, buildingId }: BuildingUnitsViewP
             {liveUnits.length} {liveUnits.length === 1 ? "unit" : "units"}
           </p>
         </div>
-        <Button type="button" className="shrink-0 rounded-full px-5 font-semibold" onClick={openAddDialog}>
-          <Plus className="h-4 w-4" />
-          Add new unit
-          <ShortcutActionLabel shortcut="Alt+U" />
-        </Button>
       </div>
 
       {unitsQuery.isLoading ? (

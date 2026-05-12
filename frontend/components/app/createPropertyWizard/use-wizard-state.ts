@@ -10,7 +10,7 @@ import { queryKeys } from "@/lib/api/query-keys";
 import type { PropertyType, UnitNestedInput, UnitType } from "@/lib/api/types";
 import { parseOptionalInt } from "@/lib/app/unit-helpers";
 
-import { entrancesForApi, canAppendOneMoreUnit, pickBuildingClientIdForNewUnit, totalUnitsForBuilding } from "./building-rail-helpers";
+import { entrancesForApi, canAppendOneMoreUnit, pickBuildingClientIdForNewUnit, totalUnitsForBuilding } from "@/components/app/createPropertyWizard/building-rail-helpers";
 import { generateBulkLocalUnits } from "./bulk-units";
 import { localUnitToNestedInput } from "./local-unit-mappers";
 import {

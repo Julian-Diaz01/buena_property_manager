@@ -211,11 +211,6 @@ export function PropertyBuildingsView({ propertyId }: PropertyBuildingsViewProps
               {buildings.length} {buildings.length === 1 ? "building" : "buildings"} · {totalUnits} total units
             </p>
           </div>
-          <Button type="button" className="shrink-0 rounded-full px-5 font-semibold" onClick={openAddDialog}>
-            <Plus className="h-4 w-4" />
-            Add new building
-            <ShortcutActionLabel shortcut="Alt+B" />
-          </Button>
         </div>
       </div>
 
@@ -299,14 +294,10 @@ export function PropertyBuildingsView({ propertyId }: PropertyBuildingsViewProps
 
       {addOpen ? (
         <Card
-          className="border-border fixed inset-0 z-50 m-auto flex max-h-[min(90vh,calc(100%-2rem))] w-[min(40rem,calc(100%-2rem))] flex-col border p-6 shadow-lg"
+          className="fixed inset-0 z-50 m-auto flex max-h-[min(90vh,calc(100%-2rem))] w-[min(40rem,calc(100%-2rem))] flex-col p-6"
           onClick={(e) => e.stopPropagation()}
         >
           <h3 className="text-lg font-semibold">Add building</h3>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Same fields as the create-property wizard (step 2). Postal and city are stored with notes in the building
-            description.
-          </p>
           <div className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
             <StepBuildings
               variant="single"

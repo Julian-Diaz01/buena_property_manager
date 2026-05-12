@@ -2,14 +2,12 @@ import { parseOptionalInt } from "@/lib/app/unit-helpers";
 
 import type { LocalBuilding } from "./types";
 
-/** Shown in the UI and used for new units when the building has no custom entrance list. */
 export const MAIN_ENTRANCE_LABEL = "Main Entrance";
 
 export function trimEntranceList(raw: string[]): string[] {
   return raw.map((s) => s.trim()).filter(Boolean);
 }
 
-/** Returns API payload: omit when empty so the backend keeps its default `["main"]`. */
 export function entrancesForApi(entrances: string[]): string[] | undefined {
   const t = trimEntranceList(entrances);
   return t.length ? t : undefined;
@@ -51,7 +49,7 @@ export function canAppendOneMoreUnit(
   return rem === null || rem > 0;
 }
 
-/** When the list is empty, unit entrance is free text defaulting to {@link MAIN_ENTRANCE_LABEL}. */
+/** When the list is empty, unit entrance is free text defaulting to {MAIN_ENTRANCE_LABEL}. */
 export function entranceSelectOptions(b: LocalBuilding): string[] | null {
   const list = trimEntranceList(b.entrances);
   return list.length ? list : null;

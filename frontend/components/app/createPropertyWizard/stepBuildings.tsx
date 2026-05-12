@@ -13,7 +13,6 @@ import { FieldError, KeyboardShortcut } from "./shared";
 import type { LocalBuilding } from "./types";
 
 export type StepBuildingsProps = {
-  /** `single` = one building card (add-building / inline flows); hides add row and duplicate/remove. */
   variant?: "wizard" | "single";
   buildings: LocalBuilding[];
   fieldErrors?: Record<string, BuildingFieldErrors>;

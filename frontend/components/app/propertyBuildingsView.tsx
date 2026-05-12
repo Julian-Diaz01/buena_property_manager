@@ -27,6 +27,8 @@ import type { BuildingSummary } from "@/lib/api/types";
 import { parseOptionalInt } from "@/lib/app/unit-helpers";
 
 import { entrancesForApi } from "@/components/app/createPropertyWizard/building-rail-helpers";
+import { ShortcutActionLabel } from "@/components/app/shortcutActionLabel";
+import { useAltKeyAction } from "@/lib/app/use-alt-key-action";
 
 type PropertyBuildingsViewProps = {
   propertyId: string;
@@ -102,6 +104,8 @@ export function PropertyBuildingsView({ propertyId }: PropertyBuildingsViewProps
     setFormError(null);
     setAddOpen(true);
   }, [propertyQuery.data?.buildings]);
+
+  useAltKeyAction(!addOpen, "KeyB", openAddDialog);
 
   const updateDialogBuilding = useCallback((clientId: string, patch: Partial<LocalBuilding>) => {
     setBuildingFieldErrors((prev) => {
@@ -207,9 +211,10 @@ export function PropertyBuildingsView({ propertyId }: PropertyBuildingsViewProps
               {buildings.length} {buildings.length === 1 ? "building" : "buildings"} · {totalUnits} total units
             </p>
           </div>
-          <Button type="button" className="shrink-0" onClick={openAddDialog}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add building
+          <Button type="button" className="shrink-0 rounded-full px-5 font-semibold" onClick={openAddDialog}>
+            <Plus className="h-4 w-4" />
+            Add new building
+            <ShortcutActionLabel shortcut="Alt+B" />
           </Button>
         </div>
       </div>

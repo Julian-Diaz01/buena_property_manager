@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, UserPlus } from "lucide-react";
 
-import { canAppendOneMoreUnit, totalUnitsForBuilding } from "@/components/app/createPropertyWizard/building-rail-helpers";
 import { generateBulkLocalUnits } from "@/components/app/createPropertyWizard/bulk-units";
 import { StepUnits } from "@/components/app/createPropertyWizard/stepUnits";
 import { localUnitToCreateInput } from "@/components/app/createPropertyWizard/local-unit-mappers";
@@ -19,6 +18,7 @@ import {
 } from "@/components/app/createPropertyWizard/schemas";
 import { useWizardKeyboardShortcuts } from "@/components/app/createPropertyWizard/use-wizard-keyboard-shortcuts";
 import { defaultUnit, newClientId, type LocalBuilding, type LocalUnit } from "@/components/app/createPropertyWizard/types";
+import { ShortcutActionLabel } from "@/components/app/shortcutActionLabel";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,9 @@ import { getProperty } from "@/lib/api/properties";
 import { createUnit, listUnits } from "@/lib/api/units";
 import { queryKeys } from "@/lib/api/query-keys";
 import type { UnitType } from "@/lib/api/types";
+import { useAltKeyAction } from "@/lib/app/use-alt-key-action";
 import { unitTypeLabel } from "@/lib/app/unit-helpers";
+import { canAppendOneMoreUnit, totalUnitsForBuilding } from "./createPropertyWizard/building-rail-helpers";
 
 type BuildingUnitsViewProps = {
   propertyId: string;
@@ -160,6 +162,8 @@ export function BuildingUnitsView({ propertyId, buildingId }: BuildingUnitsViewP
     resetAddDialog();
     setAddOpen(true);
   }, [resetAddDialog]);
+
+  useAltKeyAction(!addOpen && contractForUnitId == null, "KeyU", openAddDialog);
 
   const addUnit = useCallback(() => {
     setUnitFieldErrors({});
@@ -360,9 +364,10 @@ export function BuildingUnitsView({ propertyId, buildingId }: BuildingUnitsViewP
             {liveUnits.length} {liveUnits.length === 1 ? "unit" : "units"}
           </p>
         </div>
-        <Button type="button" className="shrink-0" onClick={openAddDialog}>
-          <Plus className="mr-2 h-4 w-4" />
+        <Button type="button" className="shrink-0 rounded-full px-5 font-semibold" onClick={openAddDialog}>
+          <Plus className="h-4 w-4" />
           Add new unit
+          <ShortcutActionLabel shortcut="Alt+U" />
         </Button>
       </div>
 

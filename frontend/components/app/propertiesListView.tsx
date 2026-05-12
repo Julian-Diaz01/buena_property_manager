@@ -1,14 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Building2, Plus, Users } from "lucide-react";
 
+import { ShortcutActionLabel } from "@/components/app/shortcutActionLabel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { listProperties } from "@/lib/api/properties";
 import { queryKeys } from "@/lib/api/query-keys";
 import type { PropertyListItem } from "@/lib/api/types";
+import { useAltKeyAction } from "@/lib/app/use-alt-key-action";
 
 function OccupancyBadge({ property }: { property: PropertyListItem }) {
   const { unitsCount, rentedUnitsCount } = property;
@@ -37,6 +41,12 @@ function OccupancyBadge({ property }: { property: PropertyListItem }) {
 }
 
 export function PropertiesListView() {
+  const router = useRouter();
+  const goNewProperty = useCallback(() => {
+    router.push("/properties/new");
+  }, [router]);
+  useAltKeyAction(true, "KeyP", goNewProperty);
+
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: queryKeys.properties,
     queryFn: () => listProperties(),
@@ -71,13 +81,11 @@ export function PropertiesListView() {
           <h1 className="text-2xl font-semibold tracking-tight">Properties</h1>
           <p className="text-muted-foreground mt-1 text-sm">Manage your property portfolio</p>
         </div>
-        <Button asChild className="shrink-0">
+        <Button asChild className="shrink-0 rounded-full px-5 font-semibold">
           <Link href="/properties/new">
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="h-4 w-4" />
             Add property
-            <span className="text-primary-foreground/70 ml-2 hidden text-xs font-normal sm:inline">
-              Alt+P
-            </span>
+            <ShortcutActionLabel shortcut="Alt+P" />
           </Link>
         </Button>
       </div>

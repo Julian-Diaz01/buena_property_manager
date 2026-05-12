@@ -123,7 +123,6 @@ export function CreatePropertyWizard() {
             {n < 3 ? <div className="bg-border mx-1 hidden h-px w-8 sm:block" /> : null}
           </div>
         ))}
-        <span className="text-muted-foreground ml-auto text-xs">{STEP_TITLES[w.step]}</span>
       </div>
 
       {w.formError ? (

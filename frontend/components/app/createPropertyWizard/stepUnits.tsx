@@ -504,6 +504,13 @@ export function StepUnits({
                 );
               })}
             </tbody>
+            <tfoot className="bg-muted/30 border-border border-t">
+              <tr>
+                <td colSpan={colCount} className="text-muted-foreground px-2 py-3 text-right text-sm font-medium">
+                  Total: {units.length} {units.length === 1 ? "unit" : "units"} to create
+                </td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       ) : (

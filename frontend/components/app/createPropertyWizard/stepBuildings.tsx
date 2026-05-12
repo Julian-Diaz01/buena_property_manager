@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 import { BuildingEntrancesField } from "./buildingEntrancesField";
 import type { BuildingFieldErrors } from "./schemas";
-import { FieldError } from "./shared";
+import { FieldError, KeyboardShortcut } from "./shared";
 import type { LocalBuilding } from "./types";
 
 export type StepBuildingsProps = {
@@ -37,8 +37,9 @@ export function StepBuildings({
   const isWizard = variant === "wizard";
   return (
     <div className="space-y-4">
-      {buildings.map((b) => {
+      {buildings.map((b, i) => {
         const fe = fieldErrors?.[b.clientId];
+        const isLastBuilding = i === buildings.length - 1;
         return (
         <Card key={b.clientId} className="border-border space-y-4 p-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -56,11 +57,16 @@ export function StepBuildings({
               />
             </div>
             {isWizard ? (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Button type="button" variant="outline" size="sm" onClick={() => onDuplicateBuilding(b)}>
                   <Copy className="mr-2 h-4 w-4" />
                   Duplicate
                 </Button>
+                {isLastBuilding ? (
+                  <span className="text-muted-foreground inline-flex items-center gap-1 text-xs" title="Duplicate last building">
+                    <KeyboardShortcut keys={["Alt", "D"]} />
+                  </span>
+                ) : null}
                 {buildings.length > 1 ? (
                   <Button type="button" variant="outline" size="sm" onClick={() => onRemoveBuilding(b.clientId)}>
                     <Trash2 className="h-4 w-4" />
@@ -176,10 +182,18 @@ export function StepBuildings({
         );
       })}
       {isWizard ? (
-        <Button type="button" variant="outline" className="w-full" onClick={onAddBuilding}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add another building (Alt+B)
-        </Button>
+        <div className="space-y-2">
+          {buildings.length > 0 ? (
+            <p className="text-muted-foreground flex flex-wrap items-center justify-center gap-1.5 text-xs">
+              <span>Duplicate last building</span>
+              <KeyboardShortcut keys={["Alt", "D"]} />
+            </p>
+          ) : null}
+          <Button type="button" variant="outline" className="w-full" onClick={onAddBuilding}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add another building (Alt+B)
+          </Button>
+        </div>
       ) : null}
     </div>
   );

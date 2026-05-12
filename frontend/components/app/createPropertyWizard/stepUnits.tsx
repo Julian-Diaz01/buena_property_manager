@@ -24,10 +24,10 @@ import {
   MAIN_ENTRANCE_LABEL,
   maxUnitsCapFromBuilding,
   remainingUnitSlots,
-} from "./building-rail-helpers";
+} from "@/components/app/createPropertyWizard/building-rail-helpers";
 import type { LocalBuilding, LocalUnit } from "./types";
 import type { UnitFieldErrors } from "./schemas";
-import { FieldError } from "./shared";
+import { FieldError, KeyboardShortcut } from "./shared";
 
 export type StepUnitsProps = {
   /** One building (e.g. add-units on existing building page) — hides bulk building picker and table Building column. */
@@ -124,6 +124,13 @@ export function StepUnits({
         </Button>
       </div>
 
+      {units.length > 0 ? (
+        <p className="text-muted-foreground flex flex-wrap items-center justify-center gap-1.5 text-xs">
+          <span>Duplicate last unit</span>
+          <KeyboardShortcut keys={["Alt", "D"]} />
+        </p>
+      ) : null}
+
       {bulkMode ? (
         <Card className="border-primary/30 bg-primary/5 space-y-4 border p-6">
           <p className="font-medium">Bulk unit creation</p>
@@ -208,11 +215,12 @@ export function StepUnits({
             </thead>
             {/* colCount mirrors the number of <th> elements above */}
             <tbody>
-              {units.map((u) => {
+              {units.map((u, rowIndex) => {
                 const expanded = expandedUnits.has(u.clientId);
                 const building = buildings.find((b) => b.clientId === u.buildingClientId);
                 const ue = unitFieldErrors?.[u.clientId];
                 const hasUnitErrors = ue && Object.keys(ue).length > 0;
+                const isLastUnit = rowIndex === units.length - 1;
                 return (
                   <Fragment key={u.clientId}>
                     <tr
@@ -251,9 +259,19 @@ export function StepUnits({
                       <td className="text-muted-foreground px-2 py-2">{u.size || "—"}</td>
                       <td className="text-muted-foreground px-2 py-2 font-mono text-xs">{u.coOwnershipShare || "—"}</td>
                       <td className="px-2 py-2 text-right">
-                        <Button type="button" variant="ghost" size="icon" onClick={() => onRemoveUnit(u.clientId)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          {isLastUnit ? (
+                            <span
+                              className="text-muted-foreground mr-0.5 inline-flex"
+                              title="Duplicate last unit"
+                            >
+                              <KeyboardShortcut keys={["Alt", "D"]} />
+                            </span>
+                          ) : null}
+                          <Button type="button" variant="ghost" size="icon" onClick={() => onRemoveUnit(u.clientId)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                     {expanded ? (

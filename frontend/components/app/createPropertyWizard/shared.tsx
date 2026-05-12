@@ -2,11 +2,6 @@ import { Fragment } from "react";
 
 import { cn } from "@/lib/utils";
 
-export function FieldError({ message }: { message?: string }) {
-  if (!message) return null;
-  return <p className="text-destructive text-xs font-medium">{message}</p>;
-}
-
 export function KeyboardShortcut({ keys, className }: { keys: string[]; className?: string }) {
   return (
     <span className={cn("inline-flex items-center gap-0.5", className)}>

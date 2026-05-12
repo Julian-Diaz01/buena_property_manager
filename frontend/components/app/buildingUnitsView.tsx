@@ -9,13 +9,6 @@ import { Plus, UserPlus } from "lucide-react";
 import { generateBulkLocalUnits } from "@/components/app/createPropertyWizard/bulk-units";
 import { StepUnits } from "@/components/app/createPropertyWizard/stepUnits";
 import { localUnitToCreateInput } from "@/components/app/createPropertyWizard/local-unit-mappers";
-import {
-  mapArrayIssuesByClientId,
-  parseUnitsStep,
-  summarizeIssues,
-  validateSingleUnit,
-  type UnitFieldErrors,
-} from "@/components/app/createPropertyWizard/schemas";
 import { useWizardKeyboardShortcuts } from "@/components/app/createPropertyWizard/use-wizard-keyboard-shortcuts";
 import { defaultUnit, newClientId, type LocalBuilding, type LocalUnit } from "@/components/app/createPropertyWizard/types";
 import { ShortcutActionLabel } from "@/components/app/shortcutActionLabel";
@@ -60,8 +53,6 @@ export function BuildingUnitsView({ propertyId, buildingId }: BuildingUnitsViewP
   const [bulkFloorEnd, setBulkFloorEnd] = useState("3");
   const [bulkUnitsPerFloor, setBulkUnitsPerFloor] = useState("2");
   const [bulkUnitType, setBulkUnitType] = useState<UnitType>("APARTMENT");
-  const [unitFieldErrors, setUnitFieldErrors] = useState<Record<string, UnitFieldErrors>>({});
-  const [formError, setFormError] = useState<string | null>(null);
 
   const propertyQuery = useQuery({
     queryKey: queryKeys.property(propertyId),
@@ -140,9 +131,6 @@ export function BuildingUnitsView({ propertyId, buildingId }: BuildingUnitsViewP
       setAddOpen(false);
       resetAddDialog();
     },
-    onError: (err: Error) => {
-      setFormError(err.message);
-    },
   });
 
   const resetAddDialog = useCallback(() => {
@@ -153,8 +141,6 @@ export function BuildingUnitsView({ propertyId, buildingId }: BuildingUnitsViewP
     setBulkFloorEnd("3");
     setBulkUnitsPerFloor("2");
     setBulkUnitType("APARTMENT");
-    setUnitFieldErrors({});
-    setFormError(null);
   }, []);
 
   const openAddDialog = useCallback(() => {
@@ -165,7 +151,6 @@ export function BuildingUnitsView({ propertyId, buildingId }: BuildingUnitsViewP
   useAltKeyAction(!addOpen && contractForUnitId == null, "KeyU", openAddDialog);
 
   const addUnit = useCallback(() => {
-    setUnitFieldErrors({});
     const b = localBuildingsForStep[0];
     if (!b) return;
     const live = unitsQuery.data?.length ?? 0;
@@ -199,12 +184,6 @@ export function BuildingUnitsView({ propertyId, buildingId }: BuildingUnitsViewP
   useWizardKeyboardShortcuts(addOpen, "units", noop, noop, addUnit, duplicateLastUnit);
 
   const removeUnit = useCallback((clientId: string) => {
-    setUnitFieldErrors((prev) => {
-      if (!(clientId in prev)) return prev;
-      const next = { ...prev };
-      delete next[clientId];
-      return next;
-    });
     setUnits((prev) => prev.filter((u) => u.clientId !== clientId));
     setExpandedUnits((prev) => {
       const next = new Set(prev);
@@ -214,21 +193,6 @@ export function BuildingUnitsView({ propertyId, buildingId }: BuildingUnitsViewP
   }, []);
 
   const updateUnit = useCallback((clientId: string, patch: Partial<LocalUnit>) => {
-    setUnitFieldErrors((prev) => {
-      const row = prev[clientId];
-      if (!row) return prev;
-      const nextRow: Partial<Record<string, string>> = { ...row };
-      for (const k of Object.keys(patch) as (keyof LocalUnit)[]) {
-        if (k in nextRow) delete nextRow[k as string];
-      }
-      if (Object.keys(nextRow).length === 0) {
-        if (!(clientId in prev)) return prev;
-        const next = { ...prev };
-        delete next[clientId];
-        return next;
-      }
-      return { ...prev, [clientId]: nextRow };
-    });
     setUnits((prev) => prev.map((u) => (u.clientId === clientId ? { ...u, ...patch } : u)));
   }, []);
 
@@ -240,24 +204,6 @@ export function BuildingUnitsView({ propertyId, buildingId }: BuildingUnitsViewP
       return next;
     });
   }, []);
-
-  const handleUnitBlur = useCallback(
-    (clientId: string) => {
-      const u = units.find((x) => x.clientId === clientId);
-      if (!u) return;
-      const r = validateSingleUnit(u, localBuildingsForStep);
-      setUnitFieldErrors((prev) => {
-        if (r.ok) {
-          if (!(clientId in prev)) return prev;
-          const next = { ...prev };
-          delete next[clientId];
-          return next;
-        }
-        return { ...prev, [clientId]: r.fieldErrors };
-      });
-    },
-    [units, localBuildingsForStep],
-  );
 
   const onGenerateBulkUnits = useCallback(() => {
     const b = localBuildingsForStep[0];
@@ -273,14 +219,9 @@ export function BuildingUnitsView({ propertyId, buildingId }: BuildingUnitsViewP
       bulkUnitsPerFloor,
       bulkUnitType,
     });
-    if (!res.ok) {
-      setFormError(res.error);
-      return;
-    }
+    if (!res.ok) return;
     setUnits((prev) => [...prev, ...res.units]);
     setBulkMode(false);
-    setFormError(null);
-    setUnitFieldErrors({});
   }, [
     bulkFloorEnd,
     bulkFloorStart,
@@ -292,24 +233,8 @@ export function BuildingUnitsView({ propertyId, buildingId }: BuildingUnitsViewP
   ]);
 
   const handleSaveDraftUnits = useCallback(() => {
-    setFormError(null);
-    const s3 = parseUnitsStep(units, localBuildingsForStep, {
-      [CONTEXT_BUILDING_CLIENT_ID]: unitsQuery.data?.length ?? 0,
-    });
-    if (!s3.success) {
-      const byClient = mapArrayIssuesByClientId(s3.error, units) as Record<string, UnitFieldErrors>;
-      setUnitFieldErrors(byClient);
-      setExpandedUnits((prev) => {
-        const next = new Set(prev);
-        for (const id of Object.keys(byClient)) next.add(id);
-        return next;
-      });
-      setFormError(summarizeIssues(s3.error, 8));
-      return;
-    }
-    setUnitFieldErrors({});
     persistDraftUnits(units);
-  }, [units, localBuildingsForStep, persistDraftUnits, unitsQuery.data?.length]);
+  }, [units, persistDraftUnits]);
 
   if (propertyQuery.isLoading) {
     return (
@@ -473,7 +398,6 @@ export function BuildingUnitsView({ propertyId, buildingId }: BuildingUnitsViewP
               singleBuildingContext
               buildings={localBuildingsForStep}
               units={units}
-              unitFieldErrors={unitFieldErrors}
               expandedUnits={expandedUnits}
               bulkMode={bulkMode}
               onBulkModeChange={setBulkMode}
@@ -492,7 +416,6 @@ export function BuildingUnitsView({ propertyId, buildingId }: BuildingUnitsViewP
               onUpdateUnit={updateUnit}
               onRemoveUnit={removeUnit}
               onAddUnit={addUnit}
-              onUnitBlur={handleUnitBlur}
               persistedUnitCountByBuildingClientId={{ [CONTEXT_BUILDING_CLIENT_ID]: unitsQuery.data?.length ?? 0 }}
               disableAddSingleUnit={!canAddSingleUnit}
               addSingleUnitHint={
@@ -500,7 +423,6 @@ export function BuildingUnitsView({ propertyId, buildingId }: BuildingUnitsViewP
               }
             />
           </div>
-          {formError ? <p className="text-destructive mt-3 shrink-0 text-sm">{formError}</p> : null}
           <div className="mt-4 flex shrink-0 justify-end gap-2 border-t border-border pt-4">
             <Button
               type="button"

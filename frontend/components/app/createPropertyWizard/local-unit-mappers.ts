@@ -3,7 +3,6 @@ import { parseCoOwnershipShare, parseOptionalInt, parseOptionalNumber } from "@/
 
 import type { LocalUnit } from "./types";
 
-/** Maps wizard row → nested payload for createBuilding (same as wizard submit). */
 export function localUnitToNestedInput(u: LocalUnit): UnitNestedInput {
   const nested: UnitNestedInput = {
     number: u.number.trim(),
@@ -18,7 +17,6 @@ export function localUnitToNestedInput(u: LocalUnit): UnitNestedInput {
   return nested;
 }
 
-/** Maps wizard row → POST /api/units body for an existing building id. */
 export function localUnitToCreateInput(apiBuildingId: string, u: LocalUnit): UnitCreateInput {
   const base: UnitCreateInput = {
     buildingId: apiBuildingId,

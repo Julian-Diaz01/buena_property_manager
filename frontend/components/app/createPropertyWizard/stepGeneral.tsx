@@ -11,17 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 import type { Accountant, Manager, PropertyType } from "@/lib/api/types";
-
-import type { Step1BlurField, Step1FieldErrors } from "./schemas";
-import { FieldError } from "./shared";
 
 type CreatePersonInput = { fullName: string };
 
 export type StepGeneralProps = {
-  fieldErrors?: Step1FieldErrors;
-  onStep1FieldBlur?: (field: Step1BlurField) => void;
   propertyType: PropertyType;
   onPropertyTypeChange: (type: PropertyType) => void;
   propertyName: string;
@@ -41,8 +35,6 @@ export type StepGeneralProps = {
 };
 
 export function StepGeneral({
-  fieldErrors,
-  onStep1FieldBlur,
   propertyType,
   onPropertyTypeChange,
   propertyName,
@@ -64,19 +56,8 @@ export function StepGeneral({
     <Card className="border-border space-y-6 p-6">
       <div className="space-y-2">
         <Label htmlFor="mgmt-type">Management type</Label>
-        <Select
-          value={propertyType}
-          onValueChange={(v) => onPropertyTypeChange(v as PropertyType)}
-          onOpenChange={(open) => {
-            if (!open) onStep1FieldBlur?.("type");
-          }}
-        >
-          <SelectTrigger
-            id="mgmt-type"
-            className={cn("w-full max-w-md", fieldErrors?.type && "border-destructive")}
-            aria-invalid={!!fieldErrors?.type}
-            onBlur={() => onStep1FieldBlur?.("type")}
-          >
+        <Select value={propertyType} onValueChange={(v) => onPropertyTypeChange(v as PropertyType)}>
+          <SelectTrigger id="mgmt-type" className="w-full max-w-md">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -84,7 +65,6 @@ export function StepGeneral({
             <SelectItem value="MV">MV (Mietverwalter)</SelectItem>
           </SelectContent>
         </Select>
-        <FieldError message={fieldErrors?.type} />
       </div>
       <div className="space-y-2">
         <Label htmlFor="prop-name">Property name</Label>
@@ -92,30 +72,15 @@ export function StepGeneral({
           id="prop-name"
           value={propertyName}
           onChange={(e) => onPropertyNameChange(e.target.value)}
-          onBlur={() => onStep1FieldBlur?.("name")}
           placeholder="e.g. Musterstraße complex"
           autoComplete="off"
-          className={cn(fieldErrors?.name && "border-destructive")}
-          aria-invalid={!!fieldErrors?.name}
         />
-        <FieldError message={fieldErrors?.name} />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="manager">Property manager</Label>
-          <Select
-            value={managerId}
-            onValueChange={onManagerIdChange}
-            onOpenChange={(open) => {
-              if (!open) onStep1FieldBlur?.("managerId");
-            }}
-          >
-            <SelectTrigger
-              id="manager"
-              className={cn("w-full", fieldErrors?.managerId && "border-destructive")}
-              aria-invalid={!!fieldErrors?.managerId}
-              onBlur={() => onStep1FieldBlur?.("managerId")}
-            >
+          <Select value={managerId} onValueChange={onManagerIdChange}>
+            <SelectTrigger id="manager" className="w-full">
               <SelectValue placeholder="Select…" />
             </SelectTrigger>
             <SelectContent>
@@ -143,23 +108,11 @@ export function StepGeneral({
               Add
             </Button>
           </div>
-          <FieldError message={fieldErrors?.managerId} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="accountant">Accountant</Label>
-          <Select
-            value={accountantId}
-            onValueChange={onAccountantIdChange}
-            onOpenChange={(open) => {
-              if (!open) onStep1FieldBlur?.("accountantId");
-            }}
-          >
-            <SelectTrigger
-              id="accountant"
-              className={cn("w-full", fieldErrors?.accountantId && "border-destructive")}
-              aria-invalid={!!fieldErrors?.accountantId}
-              onBlur={() => onStep1FieldBlur?.("accountantId")}
-            >
+          <Select value={accountantId} onValueChange={onAccountantIdChange}>
+            <SelectTrigger id="accountant" className="w-full">
               <SelectValue placeholder="Select…" />
             </SelectTrigger>
             <SelectContent>
@@ -187,7 +140,6 @@ export function StepGeneral({
               Add
             </Button>
           </div>
-          <FieldError message={fieldErrors?.accountantId} />
         </div>
       </div>
     </Card>

@@ -5,7 +5,6 @@ import type { KeyboardEvent } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 
 import { StepBuildings } from "./stepBuildings";
@@ -43,11 +42,10 @@ export function CreatePropertyWizard() {
     if (e.key === "Enter" && e.altKey && !e.metaKey && !e.ctrlKey) {
       if (e.repeat) return;
       if (w.step < 3) {
-        if (!w.canGoNext) return;
         e.preventDefault();
         w.goNext();
       } else {
-        if (w.submitWizard.isPending || !w.canSubmitWizard) return;
+        if (w.submitWizard.isPending) return;
         e.preventDefault();
         w.validateAndSubmit();
       }
@@ -55,11 +53,10 @@ export function CreatePropertyWizard() {
     }
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       if (w.step < 3) {
-        if (!w.canGoNext) return;
         e.preventDefault();
         w.goNext();
       } else {
-        if (w.submitWizard.isPending || !w.canSubmitWizard) return;
+        if (w.submitWizard.isPending) return;
         e.preventDefault();
         w.validateAndSubmit();
       }
@@ -79,8 +76,6 @@ export function CreatePropertyWizard() {
     }
   }, [
     focusRelative,
-    w.canGoNext,
-    w.canSubmitWizard,
     w.goNext,
     w.step,
     w.submitWizard.isPending,
@@ -124,37 +119,16 @@ export function CreatePropertyWizard() {
         ))}
       </div>
 
-      {w.formError ? (
-        <Alert variant="destructive">
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription className="whitespace-pre-wrap">{w.formError}</AlertDescription>
-        </Alert>
-      ) : null}
-
       {w.step === 1 ? (
         <StepGeneral
-          fieldErrors={w.step1FieldErrors}
-          onStep1FieldBlur={w.handleStep1FieldBlur}
           propertyType={w.propertyType}
-          onPropertyTypeChange={(v) => {
-            w.setPropertyType(v);
-            w.setStep1FieldErrors((e) => ({ ...e, type: undefined }));
-          }}
+          onPropertyTypeChange={w.setPropertyType}
           propertyName={w.propertyName}
-          onPropertyNameChange={(v) => {
-            w.setPropertyName(v);
-            w.setStep1FieldErrors((e) => ({ ...e, name: undefined }));
-          }}
+          onPropertyNameChange={w.setPropertyName}
           managerId={w.managerId}
-          onManagerIdChange={(id) => {
-            w.setManagerId(id);
-            w.setStep1FieldErrors((e) => ({ ...e, managerId: undefined }));
-          }}
+          onManagerIdChange={w.setManagerId}
           accountantId={w.accountantId}
-          onAccountantIdChange={(id) => {
-            w.setAccountantId(id);
-            w.setStep1FieldErrors((e) => ({ ...e, accountantId: undefined }));
-          }}
+          onAccountantIdChange={w.setAccountantId}
           newManagerName={w.newManagerName}
           onNewManagerNameChange={w.setNewManagerName}
           newAccountantName={w.newAccountantName}
@@ -169,8 +143,6 @@ export function CreatePropertyWizard() {
       {w.step === 2 ? (
         <StepBuildings
           buildings={w.buildings}
-          fieldErrors={w.buildingFieldErrors}
-          onBuildingBlur={w.handleBuildingBlur}
           onUpdateBuilding={w.updateBuilding}
           onDuplicateBuilding={w.duplicateBuilding}
           onRemoveBuilding={w.removeBuilding}
@@ -182,7 +154,6 @@ export function CreatePropertyWizard() {
         <StepUnits
           buildings={w.buildings}
           units={w.units}
-          unitFieldErrors={w.unitFieldErrors}
           expandedUnits={w.expandedUnits}
           bulkMode={w.bulkMode}
           onBulkModeChange={w.setBulkMode}
@@ -201,7 +172,6 @@ export function CreatePropertyWizard() {
           onUpdateUnit={w.updateUnit}
           onRemoveUnit={w.removeUnit}
           onAddUnit={w.addUnit}
-          onUnitBlur={w.handleUnitBlur}
           disableAddSingleUnit={!w.canAddSingleUnit}
           addSingleUnitHint={w.addSingleUnitHint}
         />
@@ -216,13 +186,13 @@ export function CreatePropertyWizard() {
             <Link href="/">Cancel</Link>
           </Button>
           {w.step < 3 ? (
-            <Button type="button" disabled={!w.canGoNext} onClick={w.goNext}>
+            <Button type="button" onClick={w.goNext}>
               Next step (Alt+Enter)
             </Button>
           ) : (
             <Button
               type="button"
-              disabled={w.submitWizard.isPending || !w.canSubmitWizard}
+              disabled={w.submitWizard.isPending}
               onClick={w.validateAndSubmit}
             >
               {w.submitWizard.isPending ? "Creating…" : "Create property (Alt+Enter)"}

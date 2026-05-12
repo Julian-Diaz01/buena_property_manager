@@ -10,14 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StepBuildings } from "@/components/app/createPropertyWizard/stepBuildings";
-import {
-  firstIssueMessage,
-  mapArrayIssuesByClientId,
-  mapFlatZodFieldErrors,
-  parseBuildingsStep,
-  parseSingleBuilding,
-  type BuildingFieldErrors,
-} from "@/components/app/createPropertyWizard/schemas";
 import { defaultBuilding, type LocalBuilding } from "@/components/app/createPropertyWizard/types";
 import { createBuilding } from "@/lib/api/buildings";
 import { getProperty } from "@/lib/api/properties";
@@ -38,8 +30,6 @@ export function PropertyBuildingsView({ propertyId }: PropertyBuildingsViewProps
   const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
   const [dialogBuildings, setDialogBuildings] = useState<LocalBuilding[]>([]);
-  const [buildingFieldErrors, setBuildingFieldErrors] = useState<Record<string, BuildingFieldErrors>>({});
-  const [formError, setFormError] = useState<string | null>(null);
 
   const propertyQuery = useQuery({
     queryKey: queryKeys.property(propertyId),
@@ -89,74 +79,24 @@ export function PropertyBuildingsView({ propertyId }: PropertyBuildingsViewProps
       await queryClient.invalidateQueries({ queryKey: queryKeys.properties });
       setAddOpen(false);
       setDialogBuildings([]);
-      setBuildingFieldErrors({});
-      setFormError(null);
-    },
-    onError: (err: Error) => {
-      setFormError(err.message);
     },
   });
 
   const openAddDialog = useCallback(() => {
     const seed = propertyQuery.data?.buildings[0]?.street ?? "";
     setDialogBuildings([defaultBuilding(seed)]);
-    setBuildingFieldErrors({});
-    setFormError(null);
     setAddOpen(true);
   }, [propertyQuery.data?.buildings]);
 
   useAltKeyAction(!addOpen, "KeyB", openAddDialog);
 
   const updateDialogBuilding = useCallback((clientId: string, patch: Partial<LocalBuilding>) => {
-    setBuildingFieldErrors((prev) => {
-      const row = prev[clientId];
-      if (!row) return prev;
-      const nextRow: Partial<Record<string, string>> = { ...row };
-      for (const k of Object.keys(patch) as (keyof LocalBuilding)[]) {
-        if (k in nextRow) delete nextRow[k as string];
-      }
-      if (Object.keys(nextRow).length === 0) {
-        if (!(clientId in prev)) return prev;
-        const next = { ...prev };
-        delete next[clientId];
-        return next;
-      }
-      return { ...prev, [clientId]: nextRow };
-    });
     setDialogBuildings((prev) => prev.map((b) => (b.clientId === clientId ? { ...b, ...patch } : b)));
   }, []);
 
-  const handleBuildingBlur = useCallback(
-    (clientId: string) => {
-      const b = dialogBuildings.find((x) => x.clientId === clientId);
-      if (!b) return;
-      const r = parseSingleBuilding(b);
-      setBuildingFieldErrors((prev) => {
-        if (r.success) {
-          if (!(clientId in prev)) return prev;
-          const next = { ...prev };
-          delete next[clientId];
-          return next;
-        }
-        return { ...prev, [clientId]: mapFlatZodFieldErrors(r.error) as BuildingFieldErrors };
-      });
-    },
-    [dialogBuildings],
-  );
-
   const handleSaveNewBuilding = useCallback(() => {
-    setFormError(null);
-    const r = parseBuildingsStep(dialogBuildings);
-    if (!r.success) {
-      setBuildingFieldErrors(
-        mapArrayIssuesByClientId(r.error, dialogBuildings) as unknown as Record<string, BuildingFieldErrors>,
-      );
-      setFormError(firstIssueMessage(r.error));
-      return;
-    }
-    setBuildingFieldErrors({});
     createBuildingMutation.mutate();
-  }, [dialogBuildings, createBuildingMutation]);
+  }, [createBuildingMutation]);
 
   if (propertyQuery.isLoading) {
     return (
@@ -302,15 +242,12 @@ export function PropertyBuildingsView({ propertyId }: PropertyBuildingsViewProps
             <StepBuildings
               variant="single"
               buildings={dialogBuildings}
-              fieldErrors={buildingFieldErrors}
-              onBuildingBlur={handleBuildingBlur}
               onUpdateBuilding={updateDialogBuilding}
               onDuplicateBuilding={() => {}}
               onRemoveBuilding={() => {}}
               onAddBuilding={() => {}}
             />
           </div>
-          {formError ? <p className="text-destructive mt-3 text-sm">{formError}</p> : null}
           <div className="mt-6 flex shrink-0 justify-end gap-2 border-t border-border pt-4">
             <Button
               type="button"
@@ -318,8 +255,6 @@ export function PropertyBuildingsView({ propertyId }: PropertyBuildingsViewProps
               onClick={() => {
                 setAddOpen(false);
                 setDialogBuildings([]);
-                setFormError(null);
-                setBuildingFieldErrors({});
               }}
             >
               Cancel
@@ -338,8 +273,6 @@ export function PropertyBuildingsView({ propertyId }: PropertyBuildingsViewProps
           onClick={() => {
             setAddOpen(false);
             setDialogBuildings([]);
-            setFormError(null);
-            setBuildingFieldErrors({});
           }}
         />
       ) : null}

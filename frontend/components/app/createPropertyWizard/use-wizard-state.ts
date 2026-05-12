@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -10,25 +10,14 @@ import { queryKeys } from "@/lib/api/query-keys";
 import type { PropertyType, UnitNestedInput, UnitType } from "@/lib/api/types";
 import { parseOptionalInt } from "@/lib/app/unit-helpers";
 
-import { entrancesForApi, canAppendOneMoreUnit, pickBuildingClientIdForNewUnit, totalUnitsForBuilding } from "@/components/app/createPropertyWizard/building-rail-helpers";
+import {
+  entrancesForApi,
+  canAppendOneMoreUnit,
+  pickBuildingClientIdForNewUnit,
+  totalUnitsForBuilding,
+} from "@/components/app/createPropertyWizard/building-rail-helpers";
 import { generateBulkLocalUnits } from "./bulk-units";
 import { localUnitToNestedInput } from "./local-unit-mappers";
-import {
-  firstIssueMessage,
-  mapArrayIssuesByClientId,
-  mapFlatZodFieldErrors,
-  mapStep1Issues,
-  parseBuildingsStep,
-  parseSingleBuilding,
-  parseStep1,
-  parseUnitsStep,
-  summarizeIssues,
-  validateSingleUnit,
-  validateStep1Field,
-  type BuildingFieldErrors,
-  type Step1BlurField,
-  type Step1FieldErrors,
-} from "./schemas";
 import {
   defaultBuilding,
   defaultUnit,
@@ -61,12 +50,6 @@ export function useWizardState() {
   const [bulkUnitsPerFloor, setBulkUnitsPerFloor] = useState("2");
   const [bulkUnitType, setBulkUnitType] = useState<UnitType>("APARTMENT");
   const [bulkBuildingId, setBulkBuildingId] = useState<string>("");
-  const [formError, setFormError] = useState<string | null>(null);
-  const [step1FieldErrors, setStep1FieldErrors] = useState<Step1FieldErrors>({});
-  const [buildingFieldErrors, setBuildingFieldErrors] = useState<
-    Record<string, Partial<Record<string, string>>>
-  >({});
-  const [unitFieldErrors, setUnitFieldErrors] = useState<Record<string, Partial<Record<string, string>>>>({});
 
   const resolvedBulkBuildingId = useMemo(() => {
     if (buildings.some((b) => b.clientId === bulkBuildingId)) return bulkBuildingId;
@@ -78,32 +61,6 @@ export function useWizardState() {
     [buildings, units],
   );
   const addSingleUnitHint = canAddSingleUnit ? undefined : "Every building is at its max units limit.";
-
-  const step1Valid = useMemo(
-    () =>
-      parseStep1({
-        name: propertyName,
-        type: propertyType,
-        managerId,
-        accountantId,
-      }).success,
-    [accountantId, managerId, propertyName, propertyType],
-  );
-
-  const buildingsStepValid = useMemo(() => parseBuildingsStep(buildings).success, [buildings]);
-
-  const unitsStepValid = useMemo(() => parseUnitsStep(units, buildings).success, [buildings, units]);
-
-  const canGoNext = useMemo(() => {
-    if (step === 1) return step1Valid;
-    if (step === 2) return buildingsStepValid;
-    return false;
-  }, [buildingsStepValid, step, step1Valid]);
-
-  const canSubmitWizard = useMemo(
-    () => step1Valid && buildingsStepValid && unitsStepValid,
-    [buildingsStepValid, step1Valid, unitsStepValid],
-  );
 
   const managersQuery = useQuery({
     queryKey: queryKeys.managers,
@@ -134,7 +91,6 @@ export function useWizardState() {
   });
 
   const addBuilding = useCallback(() => {
-    setBuildingFieldErrors({});
     setBuildings((prev) => [
       ...prev,
       {
@@ -183,10 +139,6 @@ export function useWizardState() {
   }, []);
 
   const removeBuilding = useCallback((clientId: string) => {
-    setBuildingFieldErrors((prev) => {
-      const { [clientId]: _, ...rest } = prev;
-      return rest;
-    });
     setBuildings((prev) => {
       if (prev.length <= 1) return prev;
       const next = prev.filter((b) => b.clientId !== clientId);
@@ -196,24 +148,10 @@ export function useWizardState() {
   }, []);
 
   const updateBuilding = useCallback((clientId: string, patch: Partial<LocalBuilding>) => {
-    setBuildingFieldErrors((prev) => {
-      const row = prev[clientId];
-      if (!row) return prev;
-      const nextRow: Partial<Record<string, string>> = { ...row };
-      for (const k of Object.keys(patch) as (keyof LocalBuilding)[]) {
-        if (k in nextRow) delete nextRow[k as string];
-      }
-      if (Object.keys(nextRow).length === 0) {
-        const { [clientId]: _, ...rest } = prev;
-        return rest;
-      }
-      return { ...prev, [clientId]: nextRow };
-    });
     setBuildings((prev) => prev.map((b) => (b.clientId === clientId ? { ...b, ...patch } : b)));
   }, []);
 
   const addUnit = useCallback(() => {
-    setUnitFieldErrors({});
     setUnits((prev) => {
       const bid = pickBuildingClientIdForNewUnit(buildings, prev);
       if (!bid) return prev;
@@ -242,10 +180,6 @@ export function useWizardState() {
   }, [buildings]);
 
   const removeUnit = useCallback((clientId: string) => {
-    setUnitFieldErrors((prev) => {
-      const { [clientId]: _, ...rest } = prev;
-      return rest;
-    });
     setUnits((prev) => prev.filter((u) => u.clientId !== clientId));
     setExpandedUnits((prev) => {
       const next = new Set(prev);
@@ -255,19 +189,6 @@ export function useWizardState() {
   }, []);
 
   const updateUnit = useCallback((clientId: string, patch: Partial<LocalUnit>) => {
-    setUnitFieldErrors((prev) => {
-      const row = prev[clientId];
-      if (!row) return prev;
-      const nextRow: Partial<Record<string, string>> = { ...row };
-      for (const k of Object.keys(patch) as (keyof LocalUnit)[]) {
-        if (k in nextRow) delete nextRow[k as string];
-      }
-      if (Object.keys(nextRow).length === 0) {
-        const { [clientId]: _, ...rest } = prev;
-        return rest;
-      }
-      return { ...prev, [clientId]: nextRow };
-    });
     setUnits((prev) => prev.map((u) => (u.clientId === clientId ? { ...u, ...patch } : u)));
   }, []);
 
@@ -293,14 +214,9 @@ export function useWizardState() {
       bulkUnitsPerFloor,
       bulkUnitType,
     });
-    if (!res.ok) {
-      setFormError(res.error);
-      return;
-    }
+    if (!res.ok) return;
     setUnits((prev) => [...prev, ...res.units]);
     setBulkMode(false);
-    setFormError(null);
-    setUnitFieldErrors({});
   }, [buildings, bulkFloorEnd, bulkFloorStart, bulkUnitType, bulkUnitsPerFloor, resolvedBulkBuildingId, units]);
 
   const mapUnitsForBuilding = useCallback(
@@ -311,20 +227,11 @@ export function useWizardState() {
 
   const submitWizard = useMutation({
     mutationFn: async () => {
-      const s1 = parseStep1({ name: propertyName, type: propertyType, managerId, accountantId });
-      if (!s1.success) throw new Error(firstIssueMessage(s1.error));
-
-      const s2 = parseBuildingsStep(buildings);
-      if (!s2.success) throw new Error(firstIssueMessage(s2.error));
-
-      const s3 = parseUnitsStep(units, buildings);
-      if (!s3.success) throw new Error(summarizeIssues(s3.error, 10));
-
       const property = await createProperty({
-        name: s1.data.name,
-        type: s1.data.type,
-        managerId: s1.data.managerId,
-        accountantId: s1.data.accountantId,
+        name: propertyName.trim(),
+        type: propertyType,
+        managerId,
+        accountantId,
       });
 
       for (const b of buildings) {
@@ -351,134 +258,22 @@ export function useWizardState() {
       await queryClient.invalidateQueries({ queryKey: queryKeys.properties });
       router.push(`/properties/${propertyId}`);
     },
-    onError: (err: Error) => {
-      setFormError(err.message);
-    },
   });
 
   const validateAndSubmit = useCallback(() => {
-    setFormError(null);
-    const s1 = parseStep1({ name: propertyName, type: propertyType, managerId, accountantId });
-    if (!s1.success) {
-      setStep(1);
-      setStep1FieldErrors(mapStep1Issues(s1.error));
-      setFormError(firstIssueMessage(s1.error));
-      return;
-    }
-    const s2 = parseBuildingsStep(buildings);
-    if (!s2.success) {
-      setStep(2);
-      setBuildingFieldErrors(mapArrayIssuesByClientId(s2.error, buildings));
-      setFormError(firstIssueMessage(s2.error));
-      return;
-    }
-    const s3 = parseUnitsStep(units, buildings);
-    if (!s3.success) {
-      const byClient = mapArrayIssuesByClientId(s3.error, units);
-      setUnitFieldErrors(byClient);
-      setExpandedUnits((prev) => {
-        const next = new Set(prev);
-        for (const id of Object.keys(byClient)) next.add(id);
-        return next;
-      });
-      setFormError(summarizeIssues(s3.error, 8));
-      return;
-    }
-    setStep1FieldErrors({});
-    setBuildingFieldErrors({});
-    setUnitFieldErrors({});
     submitWizard.mutate();
-  }, [accountantId, buildings, managerId, propertyName, propertyType, submitWizard, units]);
-
-  const handleStep1FieldBlur = useCallback(
-    (field: Step1BlurField) => {
-      const r = validateStep1Field(field, {
-        name: propertyName,
-        type: propertyType,
-        managerId,
-        accountantId,
-      });
-      setStep1FieldErrors((prev) => {
-        if (r.success) return { ...prev, [field]: undefined };
-        const msg = r.error.issues[0]?.message ?? "Invalid";
-        return { ...prev, [field]: msg };
-      });
-    },
-    [accountantId, managerId, propertyName, propertyType],
-  );
-
-  const handleBuildingBlur = useCallback(
-    (clientId: string) => {
-      const b = buildings.find((x) => x.clientId === clientId);
-      if (!b) return;
-      const r = parseSingleBuilding(b);
-      setBuildingFieldErrors((prev) => {
-        if (r.success) {
-          const { [clientId]: _, ...rest } = prev;
-          return rest;
-        }
-        return { ...prev, [clientId]: mapFlatZodFieldErrors(r.error) as BuildingFieldErrors };
-      });
-    },
-    [buildings],
-  );
-
-  const handleUnitBlur = useCallback(
-    (clientId: string) => {
-      const u = units.find((x) => x.clientId === clientId);
-      if (!u) return;
-      const r = validateSingleUnit(u, buildings);
-      setUnitFieldErrors((prev) => {
-        if (r.ok) {
-          const { [clientId]: _, ...rest } = prev;
-          return rest;
-        }
-        return { ...prev, [clientId]: r.fieldErrors };
-      });
-    },
-    [units, buildings],
-  );
+  }, [submitWizard]);
 
   const goNext = useCallback(() => {
-    setFormError(null);
     if (step === 1) {
-      const s1 = parseStep1({ name: propertyName, type: propertyType, managerId, accountantId });
-      if (!s1.success) {
-        setStep1FieldErrors(mapStep1Issues(s1.error));
-        setFormError(firstIssueMessage(s1.error));
-        return;
-      }
-      setStep1FieldErrors({});
       setStep(2);
       return;
     }
-    if (step === 2) {
-      const s2 = parseBuildingsStep(buildings);
-      if (!s2.success) {
-        setBuildingFieldErrors(mapArrayIssuesByClientId(s2.error, buildings));
-        setFormError(firstIssueMessage(s2.error));
-        return;
-      }
-      setBuildingFieldErrors({});
-      setStep(3);
-    }
-  }, [accountantId, buildings, managerId, propertyName, propertyType, step]);
+    if (step === 2) setStep(3);
+  }, [step]);
 
   const goBack = useCallback(() => {
-    setFormError(null);
     if (step > 1) setStep((s) => s - 1);
-  }, [step]);
-
-  useEffect(() => {
-    if (step !== 1) setStep1FieldErrors({});
-  }, [step]);
-
-  useEffect(() => {
-    if (step !== 2) setBuildingFieldErrors({});
-  }, [step]);
-
-  useEffect(() => {
-    if (step !== 3) setUnitFieldErrors({});
   }, [step]);
 
   useWizardKeyboardShortcuts(
@@ -520,11 +315,6 @@ export function useWizardState() {
     setBulkUnitType,
     resolvedBulkBuildingId,
     setBulkBuildingId,
-    formError,
-    step1FieldErrors,
-    setStep1FieldErrors,
-    buildingFieldErrors,
-    unitFieldErrors,
     managers: managersQuery.data ?? [],
     accountants: accountantsQuery.data ?? [],
     createManagerMutation,
@@ -540,14 +330,9 @@ export function useWizardState() {
     generateBulkUnits,
     submitWizard,
     validateAndSubmit,
-    handleStep1FieldBlur,
-    handleBuildingBlur,
-    handleUnitBlur,
     goNext,
     goBack,
     canAddSingleUnit,
     addSingleUnitHint,
-    canGoNext,
-    canSubmitWizard,
   };
 }

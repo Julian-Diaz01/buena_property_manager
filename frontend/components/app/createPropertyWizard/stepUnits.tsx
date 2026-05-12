@@ -26,14 +26,12 @@ import {
   remainingUnitSlots,
 } from "@/components/app/createPropertyWizard/building-rail-helpers";
 import type { LocalBuilding, LocalUnit } from "./types";
-import type { UnitFieldErrors } from "./schemas";
-import { FieldError, KeyboardShortcut } from "./shared";
+import { KeyboardShortcut } from "./shared";
 
 export type StepUnitsProps = {
   singleBuildingContext?: boolean;
   buildings: LocalBuilding[];
   units: LocalUnit[];
-  unitFieldErrors?: Record<string, UnitFieldErrors>;
   expandedUnits: Set<string>;
   bulkMode: boolean;
   onBulkModeChange: (bulk: boolean) => void;
@@ -52,7 +50,6 @@ export type StepUnitsProps = {
   onUpdateUnit: (clientId: string, patch: Partial<LocalUnit>) => void;
   onRemoveUnit: (clientId: string) => void;
   onAddUnit: () => void;
-  onUnitBlur?: (clientId: string) => void;
   persistedUnitCountByBuildingClientId?: Record<string, number>;
   disableAddSingleUnit?: boolean;
   addSingleUnitHint?: string;
@@ -62,7 +59,6 @@ export function StepUnits({
   singleBuildingContext = false,
   buildings,
   units,
-  unitFieldErrors,
   expandedUnits,
   bulkMode,
   onBulkModeChange,
@@ -81,12 +77,10 @@ export function StepUnits({
   onUpdateUnit,
   onRemoveUnit,
   onAddUnit,
-  onUnitBlur,
   persistedUnitCountByBuildingClientId = {},
   disableAddSingleUnit = false,
   addSingleUnitHint,
 }: StepUnitsProps) {
-  // expand/collapse row must span all visible columns: toggle, nr, type, [building], floor, size, mea, actions
   const colCount = singleBuildingContext ? 7 : 8;
 
   const bulkBuilding = useMemo(
@@ -210,22 +204,14 @@ export function StepUnits({
                 <th className="px-2 py-2" />
               </tr>
             </thead>
-            {/* colCount mirrors the number of <th> elements above */}
             <tbody>
               {units.map((u, rowIndex) => {
                 const expanded = expandedUnits.has(u.clientId);
                 const building = buildings.find((b) => b.clientId === u.buildingClientId);
-                const ue = unitFieldErrors?.[u.clientId];
-                const hasUnitErrors = ue && Object.keys(ue).length > 0;
                 const isLastUnit = rowIndex === units.length - 1;
                 return (
                   <Fragment key={u.clientId}>
-                    <tr
-                      className={cn(
-                        "border-border hover:bg-muted/20 border-b",
-                        hasUnitErrors && "bg-destructive/5",
-                      )}
-                    >
+                    <tr className="border-border hover:bg-muted/20 border-b">
                       <td className="px-2 py-2">
                         <Button
                           type="button"
@@ -234,16 +220,13 @@ export function StepUnits({
                           className="h-8 w-8"
                           aria-expanded={expanded}
                           onClick={() => {
-                            if (expanded) onUnitBlur?.(u.clientId);
                             onToggleExpandUnit(u.clientId);
                           }}
                         >
                           {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                         </Button>
                       </td>
-                      <td className={cn("text-muted-foreground px-2 py-2", ue?.number && "text-destructive")}>
-                        {u.number || "—"}
-                      </td>
+                      <td className="text-muted-foreground px-2 py-2">{u.number || "—"}</td>
                       <td className="px-2 py-2">
                         <Badge variant="outline">{UNIT_TYPE_OPTIONS.find((o) => o.value === u.type)?.label}</Badge>
                       </td>
@@ -274,42 +257,22 @@ export function StepUnits({
                     {expanded ? (
                       <tr>
                         <td colSpan={colCount} className="bg-muted/30 px-4 py-4">
-                          {hasUnitErrors ? (
-                            <div className="border-destructive/40 bg-destructive/5 text-destructive mb-4 space-y-1 rounded-md border px-3 py-2 text-xs">
-                              {Object.entries(ue!).map(([key, msg]) => (
-                                <p key={key}>
-                                  <span className="font-medium capitalize">{key}:</span> {msg}
-                                </p>
-                              ))}
-                            </div>
-                          ) : null}
                           <div className="grid max-w-4xl gap-4 sm:grid-cols-3">
                             <div className="space-y-2">
                               <Label className="text-xs">Nr.</Label>
                               <Input
                                 value={u.number}
                                 onChange={(e) => onUpdateUnit(u.clientId, { number: e.target.value })}
-                                onBlur={() => onUnitBlur?.(u.clientId)}
                                 tabIndex={-1}
-                                className={cn(ue?.number && "border-destructive")}
-                                aria-invalid={!!ue?.number}
                               />
-                              <FieldError message={ue?.number} />
                             </div>
                             <div className="space-y-2">
                               <Label className="text-xs">Type</Label>
                               <Select
                                 value={u.type}
                                 onValueChange={(v) => onUpdateUnit(u.clientId, { type: v as UnitType })}
-                                onOpenChange={(open) => {
-                                  if (!open) onUnitBlur?.(u.clientId);
-                                }}
                               >
-                                <SelectTrigger
-                                  className={cn("w-full", ue?.type && "border-destructive")}
-                                  aria-invalid={!!ue?.type}
-                                  onBlur={() => onUnitBlur?.(u.clientId)}
-                                >
+                                <SelectTrigger className="w-full">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -320,7 +283,6 @@ export function StepUnits({
                                   ))}
                                 </SelectContent>
                               </Select>
-                              <FieldError message={ue?.type} />
                             </div>
                             {!singleBuildingContext ? (
                               <div className="space-y-2">
@@ -334,15 +296,8 @@ export function StepUnits({
                                       ...(nb ? { entrance: defaultEntranceForNewUnit(nb) } : {}),
                                     });
                                   }}
-                                  onOpenChange={(open) => {
-                                    if (!open) onUnitBlur?.(u.clientId);
-                                  }}
                                 >
-                                  <SelectTrigger
-                                    className={cn("w-full", ue?.buildingClientId && "border-destructive")}
-                                    aria-invalid={!!ue?.buildingClientId}
-                                    onBlur={() => onUnitBlur?.(u.clientId)}
-                                  >
+                                  <SelectTrigger className="w-full">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -353,7 +308,6 @@ export function StepUnits({
                                     ))}
                                   </SelectContent>
                                 </Select>
-                                <FieldError message={ue?.buildingClientId} />
                               </div>
                             ) : null}
                             <div className="space-y-2">
@@ -361,7 +315,6 @@ export function StepUnits({
                               <Input
                                 value={u.planReference}
                                 onChange={(e) => onUpdateUnit(u.clientId, { planReference: e.target.value })}
-                                onBlur={() => onUnitBlur?.(u.clientId)}
                               />
                             </div>
                             <div className="space-y-2">
@@ -369,13 +322,9 @@ export function StepUnits({
                               <Input
                                 value={u.floor}
                                 onChange={(e) => onUpdateUnit(u.clientId, { floor: e.target.value })}
-                                onBlur={() => onUnitBlur?.(u.clientId)}
                                 placeholder="2"
                                 type="number"
-                                className={cn(ue?.floor && "border-destructive")}
-                                aria-invalid={!!ue?.floor}
                               />
-                              <FieldError message={ue?.floor} />
                             </div>
                             <div className="space-y-2">
                               <Label className="text-xs">Entrance</Label>
@@ -391,45 +340,29 @@ export function StepUnits({
                                     : null;
                                 if (selectValues?.length) {
                                   return (
-                                    <>
-                                      <Select
-                                        value={trimmed || selectValues[0]!}
-                                        onValueChange={(v) => onUpdateUnit(u.clientId, { entrance: v })}
-                                        onOpenChange={(open) => {
-                                          if (!open) onUnitBlur?.(u.clientId);
-                                        }}
-                                      >
-                                        <SelectTrigger
-                                          className={cn("w-full", ue?.entrance && "border-destructive")}
-                                          aria-invalid={!!ue?.entrance}
-                                          onBlur={() => onUnitBlur?.(u.clientId)}
-                                        >
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          {selectValues.map((opt) => (
-                                            <SelectItem key={opt} value={opt}>
-                                              {opt}
-                                            </SelectItem>
-                                          ))}
-                                        </SelectContent>
-                                      </Select>
-                                      <FieldError message={ue?.entrance} />
-                                    </>
+                                    <Select
+                                      value={trimmed || selectValues[0]!}
+                                      onValueChange={(v) => onUpdateUnit(u.clientId, { entrance: v })}
+                                    >
+                                      <SelectTrigger className="w-full">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {selectValues.map((opt) => (
+                                          <SelectItem key={opt} value={opt}>
+                                            {opt}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
                                   );
                                 }
                                 return (
-                                  <>
-                                    <Input
-                                      value={u.entrance}
-                                      onChange={(e) => onUpdateUnit(u.clientId, { entrance: e.target.value })}
-                                      onBlur={() => onUnitBlur?.(u.clientId)}
-                                      placeholder={MAIN_ENTRANCE_LABEL}
-                                      className={cn(ue?.entrance && "border-destructive")}
-                                      aria-invalid={!!ue?.entrance}
-                                    />
-                                    <FieldError message={ue?.entrance} />
-                                  </>
+                                  <Input
+                                    value={u.entrance}
+                                    onChange={(e) => onUpdateUnit(u.clientId, { entrance: e.target.value })}
+                                    placeholder={MAIN_ENTRANCE_LABEL}
+                                  />
                                 );
                               })()}
                             </div>
@@ -438,51 +371,36 @@ export function StepUnits({
                               <Input
                                 value={u.size}
                                 onChange={(e) => onUpdateUnit(u.clientId, { size: e.target.value })}
-                                onBlur={() => onUnitBlur?.(u.clientId)}
                                 type="number"
                                 placeholder="65"
-                                className={cn(ue?.size && "border-destructive")}
-                                aria-invalid={!!ue?.size}
                               />
-                              <FieldError message={ue?.size} />
                             </div>
                             <div className="space-y-2">
                               <Label className="text-xs">Rooms</Label>
                               <Input
                                 value={u.rooms}
                                 onChange={(e) => onUpdateUnit(u.clientId, { rooms: e.target.value })}
-                                onBlur={() => onUnitBlur?.(u.clientId)}
                                 type="number"
                                 placeholder="2"
-                                className={cn(ue?.rooms && "border-destructive")}
-                                aria-invalid={!!ue?.rooms}
                               />
-                              <FieldError message={ue?.rooms} />
                             </div>
                             <div className="space-y-2">
                               <Label className="text-xs">Construction year</Label>
                               <Input
                                 value={u.constructionYear}
                                 onChange={(e) => onUpdateUnit(u.clientId, { constructionYear: e.target.value })}
-                                onBlur={() => onUnitBlur?.(u.clientId)}
                                 type="number"
                                 placeholder="2020"
-                                className={cn(ue?.constructionYear && "border-destructive")}
-                                aria-invalid={!!ue?.constructionYear}
                               />
-                              <FieldError message={ue?.constructionYear} />
                             </div>
                             <div className="space-y-2">
                               <Label className="text-xs">MEA (decimal or n/d)</Label>
                               <Input
-                                className={cn("font-mono", ue?.coOwnershipShare && "border-destructive")}
+                                className="font-mono"
                                 value={u.coOwnershipShare}
                                 onChange={(e) => onUpdateUnit(u.clientId, { coOwnershipShare: e.target.value })}
-                                onBlur={() => onUnitBlur?.(u.clientId)}
                                 placeholder="100/1000"
-                                aria-invalid={!!ue?.coOwnershipShare}
                               />
-                              <FieldError message={ue?.coOwnershipShare} />
                             </div>
                             <div className="sm:col-span-3 space-y-2">
                               <Label className="text-xs">Description</Label>
@@ -490,7 +408,6 @@ export function StepUnits({
                                 rows={2}
                                 value={u.description}
                                 onChange={(e) => onUpdateUnit(u.clientId, { description: e.target.value })}
-                                onBlur={() => onUnitBlur?.(u.clientId)}
                               />
                             </div>
                           </div>

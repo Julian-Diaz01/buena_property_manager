@@ -41,6 +41,13 @@ export function CreatePropertyWizard() {
   const onStepKeyDown = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement | null;
     if (!target) return;
+    if (e.key === "Enter" && e.altKey && !e.metaKey && !e.ctrlKey) {
+      if (e.repeat) return;
+      e.preventDefault();
+      if (w.step < 3) w.goNext();
+      else if (!w.submitWizard.isPending) w.validateAndSubmit();
+      return;
+    }
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       if (w.step < 3) w.goNext();
@@ -192,7 +199,7 @@ export function CreatePropertyWizard() {
           </Button>
           {w.step < 3 ? (
             <Button type="button" onClick={w.goNext}>
-              Next step
+              Next step (Alt+Enter)
             </Button>
           ) : (
             <Button
@@ -200,7 +207,7 @@ export function CreatePropertyWizard() {
               disabled={w.submitWizard.isPending}
               onClick={w.validateAndSubmit}
             >
-              {w.submitWizard.isPending ? "Creating…" : "Create property"}
+              {w.submitWizard.isPending ? "Creating…" : "Create property (Alt+Enter)"}
             </Button>
           )}
         </div>

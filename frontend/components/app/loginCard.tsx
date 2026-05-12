@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Building2, LogIn } from "lucide-react";
+import { LogIn } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,8 +12,12 @@ export function LoginCard() {
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-4xl flex-col items-center justify-center px-4 py-10">
       <div className="mb-6 flex flex-col items-center gap-3 text-center">
-        <div className="rounded-xl bg-primary p-3 text-primary-foreground shadow-sm">
-          <Building2 className="h-7 w-7" />
+        <div className="border-border/60 flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-white p-1 shadow-sm">
+          <img
+            src="/logo.png"
+            alt="Propertly logo"
+            className="h-full w-full object-contain"
+          />
         </div>
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Propertly</h1>
         <p className="text-base text-muted-foreground">

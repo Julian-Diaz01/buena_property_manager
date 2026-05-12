@@ -11,13 +11,12 @@ import { Button } from "@/components/ui/button";
 
 function titleFromPath(pathname: string): { title: string; subtitle: string } {
   if (pathname === "/" || pathname === "") {
-    return { title: "Properties", subtitle: "Manage your properties and tenancies" };
   }
   if (pathname.includes("/properties/new")) {
     return { title: "Create property", subtitle: "Add buildings and units in a guided flow" };
   }
-  if (pathname.match(/\/properties\/[^/]+$/)) {
-    return { title: "Units", subtitle: "View and manage units for this property" };
+  if (/\/properties\/[^/]+\/buildings\/[^/]+$/.test(pathname)) {
+    return { title: "Units", subtitle: "Manage units for this building" };
   }
   if (pathname.includes("/tenancies/")) {
     return { title: "Tenancy", subtitle: "Live unit data with demo financial modules" };
@@ -29,7 +28,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { title, subtitle } = titleFromPath(pathname);
-  const isHomePage = pathname === "/" || pathname === "";
+  const isCreatePropertyPage = pathname.includes("/properties/new");
+  const showHeaderAddProperty = pathname === "/" || pathname === "";
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -93,33 +93,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <section className="bg-secondary/50 flex min-w-0 flex-1 flex-col">
-        <header className="border-border flex flex-col gap-3 border-b px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
-            <p className="text-muted-foreground mt-1 text-sm">{subtitle}</p>
-          </div>
-          {isHomePage ? (
-            <div className="flex flex-wrap items-center gap-2">
-              <Button asChild size="sm" className="sm:h-10">
-                <Link href="/properties/new">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add property
-                  <span className="text-primary-foreground/70 ml-2 hidden text-xs font-normal sm:inline">
-                    Alt+P
-                  </span>
-                </Link>
-              </Button>
-            </div>
-          ) : null}
-        </header>
-
         <div className="border-border flex gap-2 border-b px-4 py-2 lg:hidden">
           <Button asChild variant="outline" size="sm">
             <Link href="/">Properties</Link>
           </Button>
-          <Button asChild size="sm">
-            <Link href="/properties/new">New</Link>
-          </Button>
+          {!isCreatePropertyPage ? (
+            <Button asChild size="sm">
+              <Link href="/properties/new">New</Link>
+            </Button>
+          ) : null}
         </div>
 
         <div className="flex-1 px-4 py-5 sm:px-6">{children}</div>

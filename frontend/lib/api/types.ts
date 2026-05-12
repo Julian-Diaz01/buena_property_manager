@@ -24,6 +24,8 @@ export type PropertyListItem = {
   buildingIds: string[];
   unitsCount: number;
   rentedUnitsCount: number;
+  manager: Pick<Manager, "id" | "fullName">;
+  accountant: Pick<Accountant, "id" | "fullName">;
 };
 
 export type Contract = {
@@ -87,6 +89,19 @@ export type UnitWithRelations = {
 export type UnitNestedInput = {
   number: string;
   type: UnitType;
+  floor?: number;
+  entrance?: string;
+  size?: number;
+  coOwnershipShare?: number;
+  constructionYear?: number;
+  rooms?: number;
+};
+
+export type UnitCreateInput = {
+  buildingId: string;
+  number: string;
+  type: UnitType;
+  contractId?: string;
   floor?: number;
   entrance?: string;
   size?: number;

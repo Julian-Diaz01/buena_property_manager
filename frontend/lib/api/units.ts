@@ -1,5 +1,5 @@
 import { apiRequest } from "./client";
-import type { UnitWithRelations } from "./types";
+import type { UnitCreateInput, UnitWithRelations } from "./types";
 
 export type ListUnitsQuery = {
   buildingId?: string;
@@ -20,4 +20,11 @@ export async function listUnits(query: ListUnitsQuery = {}): Promise<UnitWithRel
 
 export async function getUnit(id: string): Promise<UnitWithRelations> {
   return apiRequest<UnitWithRelations>(`/api/units/${id}`);
+}
+
+export async function createUnit(body: UnitCreateInput): Promise<UnitWithRelations> {
+  return apiRequest<UnitWithRelations>("/api/units", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
 }

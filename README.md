@@ -1,46 +1,56 @@
-# Bueno Property Manager - Current Technical Status
+# Bueno Property Manager
 
-This document describes the current implementation status of the project and clearly separates the frontend and backend applications.
+**Video:** [YouTube](https://www.youtube.com/)
 
 ## Project Snapshot
 
 - **Architecture**: Split frontend and backend applications
 - **Frontend**: Next.js 16 (App Router) + React 19 + Tailwind CSS 4
 - **Backend**: Express 4 + TypeScript
-- **Current integration**: Frontend calls backend health endpoint and displays online/offline status
-- **Development state**: Early foundation
+- **Development state**: Early foundation 
 
 ## Repository Structure
 
 - `frontend/` - user interface and server-rendered page
 - `backend/` - API server
 
-## Frontend Status (Next.js App)
+# Bueno Property Manager
 
-### Current Purpose
+## Run Locally
 
-The frontend currently acts as a minimal status dashboard that confirms backend connectivity.
-
-### Run Commands
-
-From `frontend/`:
+Run the backend from `backend/`:
 
 ```bash
+cd backend
+```
+
+
+```bash
+npm install
+npm run docker:up
+npm run prisma:generate
+npm run prisma:migrate
 npm run dev
 ```
 
-## Backend Status (Express API)
+### Backend Without Docker
 
-### Current Purpose
-
-The backend provides a lightweight API service with basic middleware and one health-check endpoint.
-
-### Implemented Features
-
-### Run Commands
-
-From `backend/`:
+Use this option if your database is already running and `backend/.env` points to it.
 
 ```bash
+npm install
+npm run prisma:generate
+npm run prisma:migrate
+npm run dev
+```
+
+In a second terminal, run the frontend from `frontend/`:
+
+```bash
+cd frontend
+```
+
+```bash
+npm install
 npm run dev
 ```

@@ -17,7 +17,8 @@ import {
   validateSingleUnit,
   type UnitFieldErrors,
 } from "@/components/app/createPropertyWizard/schemas";
-import { defaultUnit, type LocalBuilding, type LocalUnit } from "@/components/app/createPropertyWizard/types";
+import { useWizardKeyboardShortcuts } from "@/components/app/createPropertyWizard/use-wizard-keyboard-shortcuts";
+import { defaultUnit, newClientId, type LocalBuilding, type LocalUnit } from "@/components/app/createPropertyWizard/types";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,8 @@ const RENT_PLACEHOLDER = "—";
 
 /** Synthetic client id — all draft units belong to the building page context. */
 const CONTEXT_BUILDING_CLIENT_ID = "__context_building__";
+
+const noop = () => {};
 
 export function BuildingUnitsView({ propertyId, buildingId }: BuildingUnitsViewProps) {
   const queryClient = useQueryClient();
@@ -170,6 +173,27 @@ export function BuildingUnitsView({ propertyId, buildingId }: BuildingUnitsViewP
     });
     setBulkMode(false);
   }, [localBuildingsForStep, unitsQuery.data?.length]);
+
+  const duplicateLastUnit = useCallback(() => {
+    setUnits((prev) => {
+      const last = prev[prev.length - 1];
+      if (!last) return prev;
+      const b = localBuildingsForStep.find((x) => x.clientId === last.buildingClientId);
+      const countForB = totalUnitsForBuilding(prev, last.buildingClientId);
+      const live = unitsQuery.data?.length ?? 0;
+      if (b && !canAppendOneMoreUnit(b, countForB, live)) return prev;
+      return [
+        ...prev,
+        {
+          ...last,
+          clientId: newClientId(),
+          number: "",
+        },
+      ];
+    });
+  }, [localBuildingsForStep, unitsQuery.data?.length]);
+
+  useWizardKeyboardShortcuts(addOpen, "units", noop, noop, addUnit, duplicateLastUnit);
 
   const removeUnit = useCallback((clientId: string) => {
     setUnitFieldErrors((prev) => {

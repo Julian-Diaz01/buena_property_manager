@@ -36,6 +36,7 @@ import {
   type LocalBuilding,
   type LocalUnit,
 } from "./types";
+import { useWizardKeyboardShortcuts } from "./use-wizard-keyboard-shortcuts";
 
 export type WizardState = ReturnType<typeof useWizardState>;
 
@@ -454,27 +455,14 @@ export function useWizardState() {
     if (step !== 3) setUnitFieldErrors({});
   }, [step]);
 
-  useEffect(() => {
-    const onWin = (e: KeyboardEvent) => {
-      if (e.repeat) return;
-      if (!(e.altKey && !e.metaKey && !e.ctrlKey)) return;
-      if (e.code === "KeyB") {
-        e.preventDefault();
-        if (step === 2) addBuilding();
-      }
-      if (e.code === "KeyU") {
-        e.preventDefault();
-        if (step === 3) addUnit();
-      }
-      if (e.code === "KeyD") {
-        e.preventDefault();
-        if (step === 2) duplicateLastBuildingShortcut();
-        if (step === 3) duplicateLastUnit();
-      }
-    };
-    window.addEventListener("keydown", onWin);
-    return () => window.removeEventListener("keydown", onWin);
-  }, [addBuilding, addUnit, duplicateLastBuildingShortcut, duplicateLastUnit, step]);
+  useWizardKeyboardShortcuts(
+    true,
+    step === 2 ? "buildings" : step === 3 ? "units" : null,
+    addBuilding,
+    duplicateLastBuildingShortcut,
+    addUnit,
+    duplicateLastUnit,
+  );
 
   return {
     stepContainerRef,

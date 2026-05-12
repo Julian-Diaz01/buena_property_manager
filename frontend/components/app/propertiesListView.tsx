@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { Building2 } from "lucide-react";
+import { Building2, Plus, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -65,22 +65,40 @@ export function PropertiesListView() {
   const rows = data ?? [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Properties</h1>
+          <p className="text-muted-foreground mt-1 text-sm">Manage your property portfolio</p>
+        </div>
+        <Button asChild className="shrink-0">
+          <Link href="/properties/new">
+            <Plus className="mr-2 h-4 w-4" />
+            Add property
+            <span className="text-primary-foreground/70 ml-2 hidden text-xs font-normal sm:inline">
+              Alt+P
+            </span>
+          </Link>
+        </Button>
+      </div>
+
       <div className="border-border bg-card overflow-hidden rounded-xl border">
-        <table className="w-full min-w-[640px] text-sm">
+        <table className="w-full min-w-[880px] text-sm">
           <thead className="bg-muted/40 border-border border-b text-left">
             <tr>
-              <th className="px-4 py-3 font-medium">Property</th>
+              <th className="px-4 py-3 font-medium">Property name</th>
               <th className="px-4 py-3 font-medium">Type</th>
-              <th className="px-4 py-3 font-medium">Units</th>
+              <th className="px-4 py-3 font-medium">Buildings</th>
+              <th className="px-4 py-3 font-medium">Total units</th>
               <th className="px-4 py-3 font-medium">Occupancy</th>
+              <th className="px-4 py-3 font-medium">Management</th>
               <th className="px-4 py-3 font-medium" />
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={5} className="text-muted-foreground px-4 py-10 text-center">
+                <td colSpan={7} className="text-muted-foreground px-4 py-10 text-center">
                   No properties yet.{" "}
                   <Link href="/properties/new" className="text-primary font-medium underline-offset-4 hover:underline">
                     Create your first property
@@ -89,28 +107,49 @@ export function PropertiesListView() {
                 </td>
               </tr>
             ) : (
-              rows.map((property) => (
-                <tr key={property.id} className="border-border hover:bg-muted/30 border-b last:border-0">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-muted flex h-10 w-10 items-center justify-center rounded-lg">
-                        <Building2 className="text-muted-foreground h-5 w-5" />
+              rows.map((property) => {
+                const nBuildings = property.buildingIds.length;
+                return (
+                  <tr key={property.id} className="border-border hover:bg-muted/30 border-b last:border-0">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-muted flex h-10 w-10 items-center justify-center rounded-lg">
+                          <Building2 className="text-muted-foreground h-5 w-5" />
+                        </div>
+                        <span className="font-medium">{property.name}</span>
                       </div>
-                      <span className="font-medium">{property.name}</span>
-                    </div>
-                  </td>
-                  <td className="text-muted-foreground px-4 py-3">{property.type}</td>
-                  <td className="text-muted-foreground px-4 py-3">{property.unitsCount} units</td>
-                  <td className="px-4 py-3">
-                    <OccupancyBadge property={property} />
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/properties/${property.id}`}>View units</Link>
-                    </Button>
-                  </td>
-                </tr>
-              ))
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge variant="outline" className="font-normal">
+                        {property.type}
+                      </Badge>
+                    </td>
+                    <td className="text-muted-foreground px-4 py-3">
+                      {nBuildings} {nBuildings === 1 ? "building" : "buildings"}
+                    </td>
+                    <td className="text-muted-foreground px-4 py-3">
+                      {property.unitsCount} {property.unitsCount === 1 ? "unit" : "units"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <OccupancyBadge property={property} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                        <Users className="h-4 w-4 shrink-0" />
+                        <div>
+                          <div>{property.manager.fullName}</div>
+                          <div className="text-muted-foreground/80 text-xs">{property.accountant.fullName}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Button asChild variant="outline" size="sm">
+                        <Link href={`/properties/${property.id}`}>View buildings</Link>
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

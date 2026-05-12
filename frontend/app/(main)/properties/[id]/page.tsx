@@ -1,8 +1,8 @@
-import { PropertyUnitsView } from "@/components/app/propertyUnitsView";
+import { PropertyBuildingsView } from "@/components/app/propertyBuildingsView";
 
 type PageProps = { params: Promise<{ id: string }> };
 
-export default async function PropertyUnitsPage({ params }: PageProps) {
+export default async function PropertyBuildingsPage({ params }: PageProps) {
   const { id } = await params;
-  return <PropertyUnitsView propertyId={id} />;
+  return <PropertyBuildingsView propertyId={id} />;
 }

@@ -16,7 +16,6 @@ export type Accountant = {
   updatedAt: string;
 };
 
-/** Shape returned by GET /api/properties (list). */
 export type PropertyListItem = {
   id: string;
   name: string;

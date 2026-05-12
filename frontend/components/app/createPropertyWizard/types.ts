@@ -1,5 +1,8 @@
 import type { UnitType } from "@/lib/api/types";
 
+/** Stable id for the first wizard/dialog building row so SSR and client markup match (random UUIDs in useState init cause hydration mismatches). User-added rows use {@link newClientId}. */
+export const INITIAL_LOCAL_BUILDING_CLIENT_ID = "__local-building-initial__";
+
 export const newClientId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
@@ -38,7 +41,7 @@ export type LocalUnit = {
 
 export function defaultBuilding(seedStreet: string): LocalBuilding {
   return {
-    clientId: newClientId(),
+    clientId: INITIAL_LOCAL_BUILDING_CLIENT_ID,
     name: "Building 1",
     street: seedStreet,
     houseNumber: "",

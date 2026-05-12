@@ -225,10 +225,15 @@ export function unitsStepSchema(
         }
       });
 
+      const draftCountByBuildingId = new Map<string, number>();
+      for (const u of arr) {
+        const id = u.buildingClientId;
+        draftCountByBuildingId.set(id, (draftCountByBuildingId.get(id) ?? 0) + 1);
+      }
       for (const b of buildings) {
         const cap = maxUnitsCapFromBuilding(b);
         if (cap === undefined) continue;
-        const draft = arr.filter((u) => u.buildingClientId === b.clientId).length;
+        const draft = draftCountByBuildingId.get(b.clientId) ?? 0;
         const persisted = persistedUnitCountByBuildingClientId[b.clientId] ?? 0;
         if (draft + persisted > cap) {
           ctx.addIssue({

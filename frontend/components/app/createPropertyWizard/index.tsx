@@ -43,15 +43,27 @@ export function CreatePropertyWizard() {
     if (!target) return;
     if (e.key === "Enter" && e.altKey && !e.metaKey && !e.ctrlKey) {
       if (e.repeat) return;
-      e.preventDefault();
-      if (w.step < 3) w.goNext();
-      else if (!w.submitWizard.isPending) w.validateAndSubmit();
+      if (w.step < 3) {
+        if (!w.canGoNext) return;
+        e.preventDefault();
+        w.goNext();
+      } else {
+        if (w.submitWizard.isPending || !w.canSubmitWizard) return;
+        e.preventDefault();
+        w.validateAndSubmit();
+      }
       return;
     }
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault();
-      if (w.step < 3) w.goNext();
-      else if (!w.submitWizard.isPending) w.validateAndSubmit();
+      if (w.step < 3) {
+        if (!w.canGoNext) return;
+        e.preventDefault();
+        w.goNext();
+      } else {
+        if (w.submitWizard.isPending || !w.canSubmitWizard) return;
+        e.preventDefault();
+        w.validateAndSubmit();
+      }
       return;
     }
     if (e.key === "Enter" && !e.shiftKey) {
@@ -66,7 +78,15 @@ export function CreatePropertyWizard() {
       e.preventDefault();
       focusRelative(target, -1);
     }
-  }, [focusRelative, w.goNext, w.step, w.submitWizard.isPending, w.validateAndSubmit]);
+  }, [
+    focusRelative,
+    w.canGoNext,
+    w.canSubmitWizard,
+    w.goNext,
+    w.step,
+    w.submitWizard.isPending,
+    w.validateAndSubmit,
+  ]);
 
   return (
     <div ref={w.stepContainerRef} className="mx-auto max-w-5xl space-y-6" onKeyDown={onStepKeyDown}>
@@ -198,13 +218,13 @@ export function CreatePropertyWizard() {
             <Link href="/">Cancel</Link>
           </Button>
           {w.step < 3 ? (
-            <Button type="button" onClick={w.goNext}>
+            <Button type="button" disabled={!w.canGoNext} onClick={w.goNext}>
               Next step (Alt+Enter)
             </Button>
           ) : (
             <Button
               type="button"
-              disabled={w.submitWizard.isPending}
+              disabled={w.submitWizard.isPending || !w.canSubmitWizard}
               onClick={w.validateAndSubmit}
             >
               {w.submitWizard.isPending ? "Creating…" : "Create property (Alt+Enter)"}

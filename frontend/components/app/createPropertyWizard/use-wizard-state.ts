@@ -79,6 +79,32 @@ export function useWizardState() {
   );
   const addSingleUnitHint = canAddSingleUnit ? undefined : "Every building is at its max units limit.";
 
+  const step1Valid = useMemo(
+    () =>
+      parseStep1({
+        name: propertyName,
+        type: propertyType,
+        managerId,
+        accountantId,
+      }).success,
+    [accountantId, managerId, propertyName, propertyType],
+  );
+
+  const buildingsStepValid = useMemo(() => parseBuildingsStep(buildings).success, [buildings]);
+
+  const unitsStepValid = useMemo(() => parseUnitsStep(units, buildings).success, [buildings, units]);
+
+  const canGoNext = useMemo(() => {
+    if (step === 1) return step1Valid;
+    if (step === 2) return buildingsStepValid;
+    return false;
+  }, [buildingsStepValid, step, step1Valid]);
+
+  const canSubmitWizard = useMemo(
+    () => step1Valid && buildingsStepValid && unitsStepValid,
+    [buildingsStepValid, step1Valid, unitsStepValid],
+  );
+
   const managersQuery = useQuery({
     queryKey: queryKeys.managers,
     queryFn: listManagers,
@@ -521,5 +547,7 @@ export function useWizardState() {
     goBack,
     canAddSingleUnit,
     addSingleUnitHint,
+    canGoNext,
+    canSubmitWizard,
   };
 }

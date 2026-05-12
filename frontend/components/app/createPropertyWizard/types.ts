@@ -13,6 +13,12 @@ export type LocalBuilding = {
   postalCode: string;
   city: string;
   description: string;
+  /** Optional rail: number of floors (1-based unit floors must be ≤ this when set). */
+  floors: string;
+  /** Optional rail: max units in this building (shown as “Max units” in the UI). */
+  maxApartments: string;
+  /** Optional: when non-empty, new units pick from this list; otherwise default “Main Entrance”. */
+  entrances: string[];
 };
 
 export type LocalUnit = {
@@ -39,17 +45,22 @@ export function defaultBuilding(seedStreet: string): LocalBuilding {
     postalCode: "",
     city: "Berlin",
     description: "",
+    floors: "",
+    maxApartments: "",
+    entrances: [],
   };
 }
 
-export function defaultUnit(buildingClientId: string): LocalUnit {
+export function defaultUnit(buildingClientId: string, building?: LocalBuilding): LocalUnit {
+  const entranceList = building?.entrances.map((s) => s.trim()).filter(Boolean) ?? [];
+  const entrance = entranceList.length ? entranceList[0]! : "Main Entrance";
   return {
     clientId: newClientId(),
     buildingClientId,
     number: "",
     type: "APARTMENT",
     floor: "",
-    entrance: "Main Entrance",
+    entrance,
     size: "",
     coOwnershipShare: "",
     constructionYear: "",

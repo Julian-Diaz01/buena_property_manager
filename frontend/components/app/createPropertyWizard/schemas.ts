@@ -3,6 +3,12 @@ import { z } from "zod";
 import type { PropertyType } from "@/lib/api/types";
 import { parseCoOwnershipShare, parseOptionalInt, parseOptionalNumber } from "@/lib/app/unit-helpers";
 
+import {
+  entranceSelectOptions,
+  isEntranceAllowedForBuilding,
+  isFloorWithinBuildingCap,
+  maxUnitsCapFromBuilding,
+} from "./building-rail-helpers";
 import type { LocalBuilding, LocalUnit } from "./types";
 
 /** Align with backend `properties.schemas` and `buildings.schemas` / `units.schemas`. */
@@ -22,6 +28,8 @@ export const step1Schema = z.object({
   accountantId: z.string().trim().min(1, "Select an accountant"),
 });
 
+export const BUILDING_FLOORS_CAP_MAX = 300;
+
 export const localBuildingFormSchema = z
   .object({
     clientId: z.string(),
@@ -39,6 +47,9 @@ export const localBuildingFormSchema = z
     postalCode: z.string().trim().min(1, "Postal code is required").max(20, "Postal code is too long"),
     city: z.string().trim().min(1, "City is required").max(100, "City must be at most 100 characters"),
     description: z.string().max(1000, "Notes must be at most 1000 characters"),
+    floors: z.string(),
+    maxApartments: z.string(),
+    entrances: z.array(z.string()),
   })
   .superRefine((b, ctx) => {
     const locationLine = [b.postalCode.trim(), b.city.trim()].filter(Boolean).join(" ");
@@ -50,6 +61,48 @@ export const localBuildingFormSchema = z
         message:
           "Notes plus postal code and city (sent as building description) must total at most 1000 characters.",
       });
+    }
+
+    if (b.floors.trim()) {
+      const n = parseOptionalInt(b.floors);
+      if (n === undefined) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["floors"], message: "Floors must be a whole number." });
+      } else if (n < 1 || n > BUILDING_FLOORS_CAP_MAX) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["floors"],
+          message: `Floors must be between 1 and ${BUILDING_FLOORS_CAP_MAX}.`,
+        });
+      }
+    }
+
+    if (b.maxApartments.trim()) {
+      const n = parseOptionalInt(b.maxApartments);
+      if (n === undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["maxApartments"],
+          message: "Max units must be a whole number.",
+        });
+      } else if (n < 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["maxApartments"],
+          message: "Max units cannot be negative.",
+        });
+      }
+    }
+
+    for (let i = 0; i < b.entrances.length; i += 1) {
+      const line = b.entrances[i]?.trim() ?? "";
+      if (line.length > 50) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["entrances"],
+          message: `Entrance ${i + 1} must be at most 50 characters.`,
+        });
+        break;
+      }
     }
   });
 
@@ -152,7 +205,12 @@ export const localUnitFormSchema = z
     }
   });
 
-export function unitsStepSchema(validBuildingClientIds: Set<string>) {
+export function unitsStepSchema(
+  validBuildingClientIds: Set<string>,
+  buildings: LocalBuilding[],
+  persistedUnitCountByBuildingClientId: Record<string, number> = {},
+) {
+  const byId = new Map(buildings.map((b) => [b.clientId, b] as const));
   return z
     .array(localUnitFormSchema)
     .min(1, "Add at least one unit.")
@@ -166,13 +224,64 @@ export function unitsStepSchema(validBuildingClientIds: Set<string>) {
           });
         }
       });
+
+      for (const b of buildings) {
+        const cap = maxUnitsCapFromBuilding(b);
+        if (cap === undefined) continue;
+        const draft = arr.filter((u) => u.buildingClientId === b.clientId).length;
+        const persisted = persistedUnitCountByBuildingClientId[b.clientId] ?? 0;
+        if (draft + persisted > cap) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [],
+            message: `Building “${b.name.trim() || "Building"}” exceeds its max units limit (${cap}, including saved units).`,
+          });
+        }
+      }
+
+      arr.forEach((u, i) => {
+        const b = byId.get(u.buildingClientId);
+        if (!b) return;
+        if (u.floor.trim() && !isFloorWithinBuildingCap(b, u.floor)) {
+          const fc = parseOptionalInt(b.floors);
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [i, "floor"],
+            message:
+              fc !== undefined
+                ? `Floor must be between 1 and ${fc} for this building (set on the building).`
+                : "Floor is outside the allowed range for this building.",
+          });
+        }
+        if (u.entrance.trim() && !isEntranceAllowedForBuilding(b, u.entrance)) {
+          const opts = entranceSelectOptions(b);
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [i, "entrance"],
+            message: opts?.length
+              ? `Entrance must be one of: ${opts.join(", ")}.`
+              : "Entrance is not allowed for this building.",
+          });
+        }
+      });
     });
 }
 
 export type Step1FieldErrors = Partial<Record<"name" | "type" | "managerId" | "accountantId", string>>;
 
 export type BuildingFieldErrors = Partial<
-  Record<"name" | "street" | "houseNumber" | "postalCode" | "city" | "description", string>
+  Record<
+    | "name"
+    | "street"
+    | "houseNumber"
+    | "postalCode"
+    | "city"
+    | "description"
+    | "floors"
+    | "maxApartments"
+    | "entrances",
+    string
+  >
 >;
 
 export type UnitFieldErrors = Partial<
@@ -280,6 +389,24 @@ export function validateSingleUnit(u: LocalUnit, buildings: LocalBuilding[]) {
       } satisfies UnitFieldErrors,
     };
   }
+  const b = buildings.find((x) => x.clientId === u.buildingClientId);
+  const fieldErrors: UnitFieldErrors = {};
+  if (b && u.floor.trim() && !isFloorWithinBuildingCap(b, u.floor)) {
+    const fc = parseOptionalInt(b.floors);
+    fieldErrors.floor =
+      fc !== undefined
+        ? `Floor must be between 1 and ${fc} for this building (set on the building).`
+        : "Floor is outside the allowed range for this building.";
+  }
+  if (b && u.entrance.trim() && !isEntranceAllowedForBuilding(b, u.entrance)) {
+    const opts = entranceSelectOptions(b);
+    fieldErrors.entrance = opts?.length
+      ? `Entrance must be one of: ${opts.join(", ")}.`
+      : "Entrance is not allowed for this building.";
+  }
+  if (Object.keys(fieldErrors).length) {
+    return { ok: false as const, fieldErrors };
+  }
   return { ok: true as const, fieldErrors: {} as UnitFieldErrors };
 }
 
@@ -296,7 +423,11 @@ export function parseBuildingsStep(buildings: LocalBuilding[]) {
   return buildingsStepSchema.safeParse(buildings);
 }
 
-export function parseUnitsStep(units: LocalUnit[], buildings: LocalBuilding[]) {
+export function parseUnitsStep(
+  units: LocalUnit[],
+  buildings: LocalBuilding[],
+  persistedUnitCountByBuildingClientId: Record<string, number> = {},
+) {
   const ids = new Set(buildings.map((b) => b.clientId));
-  return unitsStepSchema(ids).safeParse(units);
+  return unitsStepSchema(ids, buildings, persistedUnitCountByBuildingClientId).safeParse(units);
 }

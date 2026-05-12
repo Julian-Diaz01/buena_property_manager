@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import type { Accountant, Manager, PropertyType } from "@/lib/api/types";
 
 import type { Step1BlurField, Step1FieldErrors } from "./schemas";
+import { FieldError } from "./shared";
 
 type CreatePersonInput = { fullName: string };
 
@@ -38,11 +39,6 @@ export type StepGeneralProps = {
   createManagerMutation: UseMutationResult<Manager, Error, CreatePersonInput>;
   createAccountantMutation: UseMutationResult<Accountant, Error, CreatePersonInput>;
 };
-
-function FieldError({ message }: { message?: string }) {
-  if (!message) return null;
-  return <p className="text-destructive text-xs font-medium">{message}</p>;
-}
 
 export function StepGeneral({
   fieldErrors,

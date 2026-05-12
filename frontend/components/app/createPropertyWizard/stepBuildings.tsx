@@ -7,15 +7,14 @@ import { Label } from "@/components/ui/label";
 
 import { cn } from "@/lib/utils";
 
+import { BuildingEntrancesField } from "./buildingEntrancesField";
 import type { BuildingFieldErrors } from "./schemas";
+import { FieldError } from "./shared";
 import type { LocalBuilding } from "./types";
 
-function FieldError({ message }: { message?: string }) {
-  if (!message) return null;
-  return <p className="text-destructive text-xs font-medium">{message}</p>;
-}
-
 export type StepBuildingsProps = {
+  /** `single` = one building card (add-building / inline flows); hides add row and duplicate/remove. */
+  variant?: "wizard" | "single";
   buildings: LocalBuilding[];
   fieldErrors?: Record<string, BuildingFieldErrors>;
   onBuildingBlur?: (clientId: string) => void;
@@ -26,6 +25,7 @@ export type StepBuildingsProps = {
 };
 
 export function StepBuildings({
+  variant = "wizard",
   buildings,
   fieldErrors,
   onBuildingBlur,
@@ -34,6 +34,7 @@ export function StepBuildings({
   onRemoveBuilding,
   onAddBuilding,
 }: StepBuildingsProps) {
+  const isWizard = variant === "wizard";
   return (
     <div className="space-y-4">
       {buildings.map((b) => {
@@ -54,17 +55,19 @@ export function StepBuildings({
                 aria-invalid={!!fe?.name}
               />
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => onDuplicateBuilding(b)}>
-                <Copy className="mr-2 h-4 w-4" />
-                Duplicate
-              </Button>
-              {buildings.length > 1 ? (
-                <Button type="button" variant="outline" size="sm" onClick={() => onRemoveBuilding(b.clientId)}>
-                  <Trash2 className="h-4 w-4" />
+            {isWizard ? (
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => onDuplicateBuilding(b)}>
+                  <Copy className="mr-2 h-4 w-4" />
+                  Duplicate
                 </Button>
-              ) : null}
-            </div>
+                {buildings.length > 1 ? (
+                  <Button type="button" variant="outline" size="sm" onClick={() => onRemoveBuilding(b.clientId)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                ) : null}
+              </div>
+            ) : null}
           </div>
           <FieldError message={fe?.name} />
           <div className="grid gap-4 sm:grid-cols-4">
@@ -131,13 +134,53 @@ export function StepBuildings({
               <FieldError message={fe?.description} />
             </div>
           </div>
+          <div className="border-border grid gap-4 border-t pt-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Floors (optional)</Label>
+              <Input
+                inputMode="numeric"
+                value={b.floors}
+                onChange={(e) => onUpdateBuilding(b.clientId, { floors: e.target.value })}
+                onBlur={() => onBuildingBlur?.(b.clientId)}
+                placeholder="e.g. 5"
+                className={cn(fe?.floors && "border-destructive")}
+                aria-invalid={!!fe?.floors}
+              />
+              <p className="text-muted-foreground text-xs">Unit floors must stay between 1 and this value when set.</p>
+              <FieldError message={fe?.floors} />
+            </div>
+            <div className="space-y-2">
+              <Label>Max units (optional)</Label>
+              <Input
+                inputMode="numeric"
+                value={b.maxApartments}
+                onChange={(e) => onUpdateBuilding(b.clientId, { maxApartments: e.target.value })}
+                onBlur={() => onBuildingBlur?.(b.clientId)}
+                placeholder="e.g. 20"
+                className={cn(fe?.maxApartments && "border-destructive")}
+                aria-invalid={!!fe?.maxApartments}
+              />
+              <p className="text-muted-foreground text-xs">Caps draft + saved units for this building.</p>
+              <FieldError message={fe?.maxApartments} />
+            </div>
+            <div className="sm:col-span-2">
+              <BuildingEntrancesField
+                value={b.entrances}
+                onChange={(next) => onUpdateBuilding(b.clientId, { entrances: next })}
+                idPrefix={`ent-${b.clientId}`}
+                errorMessage={fe?.entrances}
+              />
+            </div>
+          </div>
         </Card>
         );
       })}
-      <Button type="button" variant="outline" className="w-full" onClick={onAddBuilding}>
-        <Plus className="mr-2 h-4 w-4" />
-        Add another building (Alt+B)
-      </Button>
+      {isWizard ? (
+        <Button type="button" variant="outline" className="w-full" onClick={onAddBuilding}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add another building (Alt+B)
+        </Button>
+      ) : null}
     </div>
   );
 }

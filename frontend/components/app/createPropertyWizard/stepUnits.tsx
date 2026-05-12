@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, useMemo } from "react";
 import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -16,17 +16,22 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { UnitType } from "@/lib/api/types";
-import { UNIT_TYPE_OPTIONS } from "@/lib/app/unit-helpers";
+import { parseOptionalInt, UNIT_TYPE_OPTIONS } from "@/lib/app/unit-helpers";
 
+import {
+  defaultEntranceForNewUnit,
+  entranceSelectOptions,
+  MAIN_ENTRANCE_LABEL,
+  maxUnitsCapFromBuilding,
+  remainingUnitSlots,
+} from "./building-rail-helpers";
 import type { LocalBuilding, LocalUnit } from "./types";
 import type { UnitFieldErrors } from "./schemas";
-
-function FieldError({ message }: { message?: string }) {
-  if (!message) return null;
-  return <p className="text-destructive text-xs font-medium">{message}</p>;
-}
+import { FieldError } from "./shared";
 
 export type StepUnitsProps = {
+  /** One building (e.g. add-units on existing building page) — hides bulk building picker and table Building column. */
+  singleBuildingContext?: boolean;
   buildings: LocalBuilding[];
   units: LocalUnit[];
   unitFieldErrors?: Record<string, UnitFieldErrors>;
@@ -50,9 +55,14 @@ export type StepUnitsProps = {
   onAddUnit: () => void;
   /** Re-run unit + building-id checks when a control loses focus (full row). */
   onUnitBlur?: (clientId: string) => void;
+  /** Saved unit counts per building client id (e.g. existing DB rows on the building page). */
+  persistedUnitCountByBuildingClientId?: Record<string, number>;
+  disableAddSingleUnit?: boolean;
+  addSingleUnitHint?: string;
 };
 
 export function StepUnits({
+  singleBuildingContext = false,
   buildings,
   units,
   unitFieldErrors,
@@ -75,7 +85,34 @@ export function StepUnits({
   onRemoveUnit,
   onAddUnit,
   onUnitBlur,
+  persistedUnitCountByBuildingClientId = {},
+  disableAddSingleUnit = false,
+  addSingleUnitHint,
 }: StepUnitsProps) {
+  // expand/collapse row must span all visible columns: toggle, nr, type, [building], floor, size, mea, actions
+  const colCount = singleBuildingContext ? 7 : 8;
+
+  const bulkBuilding = useMemo(
+    () => buildings.find((b) => b.clientId === resolvedBulkBuildingId),
+    [buildings, resolvedBulkBuildingId],
+  );
+  const bulkCapacityHint = useMemo(() => {
+    if (!bulkBuilding) return null;
+    const persistedN = persistedUnitCountByBuildingClientId[resolvedBulkBuildingId] ?? 0;
+    const draftN = units.filter((u) => u.buildingClientId === resolvedBulkBuildingId).length;
+    const cap = maxUnitsCapFromBuilding(bulkBuilding);
+    const rem = cap !== undefined ? remainingUnitSlots(bulkBuilding, draftN, persistedN) : null;
+    const floorCap = parseOptionalInt(bulkBuilding.floors);
+    const parts: string[] = [];
+    if (rem !== null) {
+      parts.push(`${draftN} draft + ${persistedN} saved = ${draftN + persistedN} / ${cap} units`);
+    }
+    if (floorCap !== undefined) {
+      parts.push(`floors rail: unit floors 1–${floorCap}`);
+    }
+    return parts.length ? parts.join(" · ") : null;
+  }, [bulkBuilding, persistedUnitCountByBuildingClientId, resolvedBulkBuildingId, units]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-2">
@@ -90,22 +127,24 @@ export function StepUnits({
       {bulkMode ? (
         <Card className="border-primary/30 bg-primary/5 space-y-4 border p-6">
           <p className="font-medium">Bulk unit creation</p>
-          <div className="grid gap-4 sm:grid-cols-4">
-            <div className="space-y-2">
-              <Label>Building</Label>
-              <Select value={resolvedBulkBuildingId} onValueChange={onBulkBuildingIdChange}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {buildings.map((b) => (
-                    <SelectItem key={b.clientId} value={b.clientId}>
-                      {b.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className={cn("grid gap-4", singleBuildingContext ? "sm:grid-cols-3" : "sm:grid-cols-4")}>
+            {!singleBuildingContext ? (
+              <div className="space-y-2">
+                <Label>Building</Label>
+                <Select value={resolvedBulkBuildingId} onValueChange={onBulkBuildingIdChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {buildings.map((b) => (
+                      <SelectItem key={b.clientId} value={b.clientId}>
+                        {b.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
             <div className="space-y-2">
               <Label>Floor start</Label>
               <Input type="number" value={bulkFloorStart} onChange={(e) => onBulkFloorStartChange(e.target.value)} />
@@ -144,6 +183,9 @@ export function StepUnits({
               Generate units
             </Button>
           </div>
+          {bulkCapacityHint ? (
+            <p className="text-muted-foreground text-xs">{bulkCapacityHint}</p>
+          ) : null}
         </Card>
       ) : null}
 
@@ -155,13 +197,16 @@ export function StepUnits({
                 <th className="w-10 px-2 py-2" />
                 <th className="px-2 py-2 text-left font-medium">Nr.</th>
                 <th className="px-2 py-2 text-left font-medium">Type</th>
-                <th className="px-2 py-2 text-left font-medium">Building</th>
+                {!singleBuildingContext ? (
+                  <th className="px-2 py-2 text-left font-medium">Building</th>
+                ) : null}
                 <th className="px-2 py-2 text-left font-medium">Floor / entrance</th>
                 <th className="px-2 py-2 text-left font-medium">Size m²</th>
                 <th className="px-2 py-2 text-left font-medium">MEA</th>
                 <th className="px-2 py-2" />
               </tr>
             </thead>
+            {/* colCount mirrors the number of <th> elements above */}
             <tbody>
               {units.map((u) => {
                 const expanded = expandedUnits.has(u.clientId);
@@ -197,7 +242,9 @@ export function StepUnits({
                       <td className="px-2 py-2">
                         <Badge variant="outline">{UNIT_TYPE_OPTIONS.find((o) => o.value === u.type)?.label}</Badge>
                       </td>
-                      <td className="text-muted-foreground px-2 py-2">{building?.name ?? "—"}</td>
+                      {!singleBuildingContext ? (
+                        <td className="text-muted-foreground px-2 py-2">{building?.name ?? "—"}</td>
+                      ) : null}
                       <td className="text-muted-foreground px-2 py-2">
                         {[u.floor, u.entrance].filter(Boolean).join(" · ") || "—"}
                       </td>
@@ -211,7 +258,7 @@ export function StepUnits({
                     </tr>
                     {expanded ? (
                       <tr>
-                        <td colSpan={8} className="bg-muted/30 px-4 py-4">
+                        <td colSpan={colCount} className="bg-muted/30 px-4 py-4">
                           {hasUnitErrors ? (
                             <div className="border-destructive/40 bg-destructive/5 text-destructive mb-4 space-y-1 rounded-md border px-3 py-2 text-xs">
                               {Object.entries(ue!).map(([key, msg]) => (
@@ -260,32 +307,40 @@ export function StepUnits({
                               </Select>
                               <FieldError message={ue?.type} />
                             </div>
-                            <div className="space-y-2">
-                              <Label className="text-xs">Building</Label>
-                              <Select
-                                value={u.buildingClientId}
-                                onValueChange={(v) => onUpdateUnit(u.clientId, { buildingClientId: v })}
-                                onOpenChange={(open) => {
-                                  if (!open) onUnitBlur?.(u.clientId);
-                                }}
-                              >
-                                <SelectTrigger
-                                  className={cn("w-full", ue?.buildingClientId && "border-destructive")}
-                                  aria-invalid={!!ue?.buildingClientId}
-                                  onBlur={() => onUnitBlur?.(u.clientId)}
+                            {!singleBuildingContext ? (
+                              <div className="space-y-2">
+                                <Label className="text-xs">Building</Label>
+                                <Select
+                                  value={u.buildingClientId}
+                                  onValueChange={(v) => {
+                                    const nb = buildings.find((b) => b.clientId === v);
+                                    onUpdateUnit(u.clientId, {
+                                      buildingClientId: v,
+                                      ...(nb ? { entrance: defaultEntranceForNewUnit(nb) } : {}),
+                                    });
+                                  }}
+                                  onOpenChange={(open) => {
+                                    if (!open) onUnitBlur?.(u.clientId);
+                                  }}
                                 >
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {buildings.map((b) => (
-                                    <SelectItem key={b.clientId} value={b.clientId}>
-                                      {b.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FieldError message={ue?.buildingClientId} />
-                            </div>
+                                  <SelectTrigger
+                                    className={cn("w-full", ue?.buildingClientId && "border-destructive")}
+                                    aria-invalid={!!ue?.buildingClientId}
+                                    onBlur={() => onUnitBlur?.(u.clientId)}
+                                  >
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {buildings.map((b) => (
+                                      <SelectItem key={b.clientId} value={b.clientId}>
+                                        {b.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FieldError message={ue?.buildingClientId} />
+                              </div>
+                            ) : null}
                             <div className="space-y-2">
                               <Label className="text-xs">Plan ref.</Label>
                               <Input
@@ -309,15 +364,59 @@ export function StepUnits({
                             </div>
                             <div className="space-y-2">
                               <Label className="text-xs">Entrance</Label>
-                              <Input
-                                value={u.entrance}
-                                onChange={(e) => onUpdateUnit(u.clientId, { entrance: e.target.value })}
-                                onBlur={() => onUnitBlur?.(u.clientId)}
-                                placeholder="Main Entrance"
-                                className={cn(ue?.entrance && "border-destructive")}
-                                aria-invalid={!!ue?.entrance}
-                              />
-                              <FieldError message={ue?.entrance} />
+                              {(() => {
+                                const opts = building ? entranceSelectOptions(building) : null;
+                                const trimmed = u.entrance.trim();
+                                const unknown = Boolean(opts?.length && trimmed && !opts.includes(trimmed));
+                                const selectValues =
+                                  opts && opts.length
+                                    ? unknown
+                                      ? [...opts, trimmed]
+                                      : opts
+                                    : null;
+                                if (selectValues?.length) {
+                                  return (
+                                    <>
+                                      <Select
+                                        value={trimmed || selectValues[0]!}
+                                        onValueChange={(v) => onUpdateUnit(u.clientId, { entrance: v })}
+                                        onOpenChange={(open) => {
+                                          if (!open) onUnitBlur?.(u.clientId);
+                                        }}
+                                      >
+                                        <SelectTrigger
+                                          className={cn("w-full", ue?.entrance && "border-destructive")}
+                                          aria-invalid={!!ue?.entrance}
+                                          onBlur={() => onUnitBlur?.(u.clientId)}
+                                        >
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {selectValues.map((opt) => (
+                                            <SelectItem key={opt} value={opt}>
+                                              {opt}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                      <FieldError message={ue?.entrance} />
+                                    </>
+                                  );
+                                }
+                                return (
+                                  <>
+                                    <Input
+                                      value={u.entrance}
+                                      onChange={(e) => onUpdateUnit(u.clientId, { entrance: e.target.value })}
+                                      onBlur={() => onUnitBlur?.(u.clientId)}
+                                      placeholder={MAIN_ENTRANCE_LABEL}
+                                      className={cn(ue?.entrance && "border-destructive")}
+                                      aria-invalid={!!ue?.entrance}
+                                    />
+                                    <FieldError message={ue?.entrance} />
+                                  </>
+                                );
+                              })()}
                             </div>
                             <div className="space-y-2">
                               <Label className="text-xs">Size (m²)</Label>
@@ -396,10 +495,20 @@ export function StepUnits({
       )}
 
       {!bulkMode ? (
-        <Button type="button" variant="outline" className="w-full" onClick={onAddUnit}>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={onAddUnit}
+          disabled={disableAddSingleUnit}
+          title={addSingleUnitHint}
+        >
           <Plus className="mr-2 h-4 w-4" />
           Add single unit (Alt+U)
         </Button>
+      ) : null}
+      {!bulkMode && addSingleUnitHint && disableAddSingleUnit ? (
+        <p className="text-muted-foreground text-center text-xs">{addSingleUnitHint}</p>
       ) : null}
     </div>
   );

@@ -1,6 +1,6 @@
-# Bueno Property Manager
+# Buena Property Manager
 
-**Video:** [YouTube](https://www.youtube.com/)
+**Video:** [YouTube](https://youtu.be/17sk_uwrsnI)
 
 ## Project Snapshot
 
@@ -13,8 +13,6 @@
 
 - `frontend/` - user interface and server-rendered page
 - `backend/` - API server
-
-# Bueno Property Manager
 
 ## Run Locally
 
